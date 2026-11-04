@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cdccn-datos.schema.json",
+  "title": "Datos de calendario-cdccn",
+  "description": "Archivo único con todos los datos sincronizados (cdccn/cdccn-datos.json en Google Drive).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["formato", "version", "modificado", "modificadoPor", "calendario", "caracteristicas", "etiquetas", "eventos", "dias"],
+  "properties": {
+    "formato": { "const": "cdccn-datos" },
+    "version": { "const": 1 },
+    "modificado": { "$ref": "#/$defs/fechaHora" },
+    "modificadoPor": { "enum": ["android", "web"] },
+
+    "calendario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nombre", "descripcion", "icono"],
+      "properties": {
+        "nombre": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "descripcion": { "type": "string", "maxLength": 120 },
+        "icono": { "$ref": "#/$defs/icono" }
+      }
+    },
+
+    "caracteristicas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "nombre", "icono", "archivada"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "nombre": { "type": "string", "minLength": 1, "maxLength": 40 },
+          "icono": { "$ref": "#/$defs/icono" },
+          "archivada": { "type": "boolean" }
+        }
+      }
+    },
+
+    "etiquetas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "nombre", "color", "archivada"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "nombre": { "type": "string", "minLength": 1, "maxLength": 30 },
+          "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+          "archivada": { "type": "boolean" }
+        }
+      }
+    },
+
+    "eventos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "nombre", "inicio", "fin"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "nombre": { "type": "string", "minLength": 1, "maxLength": 60 },
+          "inicio": { "$ref": "#/$defs/fecha" },
+          "fin": { "$ref": "#/$defs/fecha" }
+        }
+      }
+    },
+
+    "dias": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/fecha" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["intensidad", "caracteristicas", "notas"],
+        "properties": {
+          "intensidad": { "type": "integer", "minimum": 0, "maximum": 3 },
+          "caracteristicas": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "$ref": "#/$defs/id" }
+          },
+          "notas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "texto", "etiquetas", "creada", "modificada"],
+              "properties": {
+                "id": { "$ref": "#/$defs/id" },
+                "texto": { "type": "string", "minLength": 1 },
+                "etiquetas": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": { "$ref": "#/$defs/id" }
+                },
+                "creada": { "$ref": "#/$defs/fechaHora" },
+                "modificada": { "$ref": "#/$defs/fechaHora" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "id": {
+      "description": "Identificador corto: prefijo de tipo + 8 caracteres aleatorios (p.ej. car_k3x9q2mf).",
+      "type": "string",
+      "pattern": "^(car|eti|eve|not)_[a-z0-9]{8}$"
+    },
+    "fecha": {
+      "description": "Fecha local del usuario, sin hora (AAAA-MM-DD).",
+      "type": "string",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$"
+    },
+    "fechaHora": {
+      "description": "Fecha y hora ISO 8601 con zona horaria (p.ej. 2026-11-04T22:40:12-06:00).",
+      "type": "string",
+      "format": "date-time"
+    },
+    "icono": {
+      "description": "Nombre de un ícono del conjunto de íconos de la app (p.ej. personas, cafe, telefono).",
+      "type": "string",
+      "pattern": "^[a-z0-9-]{1,30}$"
+    }
+  }
+}

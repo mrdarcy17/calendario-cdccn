@@ -1,0 +1,92 @@
+{
+  "formato": "cdccn-datos",
+  "version": 1,
+  "modificado": "2026-11-04T22:40:12-06:00",
+  "modificadoPor": "android",
+
+  "calendario": {
+    "nombre": "Interacción",
+    "descripcion": "",
+    "icono": "personas"
+  },
+
+  "caracteristicas": [
+    { "id": "car_k3x9q2mf", "nombre": "Sacar un contacto", "icono": "telefono", "archivada": false },
+    { "id": "car_p7d1w8za", "nombre": "Conocer a alguien nuevo", "icono": "saludo", "archivada": false },
+    { "id": "car_m2r6t4yb", "nombre": "Salir con alguien nuevo", "icono": "cafe", "archivada": false },
+    { "id": "car_h9n3c5ve", "nombre": "Iniciar conversación", "icono": "conversacion", "archivada": false },
+    { "id": "car_q8l2s7uj", "nombre": "Hablar en público", "icono": "microfono", "archivada": true }
+  ],
+
+  "etiquetas": [
+    { "id": "eti_a4f8k1zp", "nombre": "contacto", "color": "#FACC15", "archivada": false },
+    { "id": "eti_b7g2m9xq", "nombre": "café", "color": "#60A5FA", "archivada": false },
+    { "id": "eti_c1h5n3wr", "nombre": "reto", "color": "#F87171", "archivada": false },
+    { "id": "eti_d8j2p6ls", "nombre": "trabajo", "color": "#A78BFA", "archivada": true }
+  ],
+
+  "eventos": [
+    { "id": "eve_r5t8y2ui", "nombre": "Viaje puerto", "inicio": "2026-10-30", "fin": "2026-11-02" },
+    { "id": "eve_o3p6a9sd", "nombre": "Fiesta de Ana", "inicio": "2026-11-01", "fin": "2026-11-02" },
+    { "id": "eve_f4g7h1jk", "nombre": "Exámenes", "inicio": "2026-11-09", "fin": "2026-11-13" }
+  ],
+
+  "dias": {
+    "2026-09-22": {
+      "intensidad": 1,
+      "caracteristicas": ["car_q8l2s7uj"],
+      "notas": []
+    },
+    "2026-10-28": {
+      "intensidad": 2,
+      "caracteristicas": ["car_h9n3c5ve"],
+      "notas": [
+        {
+          "id": "not_z1x2c3v4",
+          "texto": "Saludé a dos personas nuevas en el gimnasio.",
+          "etiquetas": [],
+          "creada": "2026-10-28T20:15:00-06:00",
+          "modificada": "2026-10-28T20:15:00-06:00"
+        }
+      ]
+    },
+    "2026-11-02": {
+      "intensidad": 3,
+      "caracteristicas": ["car_k3x9q2mf", "car_p7d1w8za"],
+      "notas": [
+        {
+          "id": "not_b5n6m7q8",
+          "texto": "Platiqué con Ana en el café del malecón; quedamos de vernos el jueves.",
+          "etiquetas": ["eti_a4f8k1zp", "eti_b7g2m9xq"],
+          "creada": "2026-11-02T19:42:10-06:00",
+          "modificada": "2026-11-02T21:03:55-06:00"
+        },
+        {
+          "id": "not_w9e8r7t6",
+          "texto": "Me costó iniciar la plática en el grupo, pero al final fluyó.",
+          "etiquetas": ["eti_c1h5n3wr"],
+          "creada": "2026-11-02T22:10:00-06:00",
+          "modificada": "2026-11-02T22:10:00-06:00"
+        }
+      ]
+    },
+    "2026-11-03": {
+      "intensidad": 1,
+      "caracteristicas": [],
+      "notas": [
+        {
+          "id": "not_y5u4i3o2",
+          "texto": "Día tranquilo, solo una conversación corta con un vecino.",
+          "etiquetas": [],
+          "creada": "2026-11-03T21:30:00-06:00",
+          "modificada": "2026-11-03T21:30:00-06:00"
+        }
+      ]
+    },
+    "2026-11-04": {
+      "intensidad": 2,
+      "caracteristicas": ["car_h9n3c5ve"],
+      "notas": []
+    }
+  }
+}

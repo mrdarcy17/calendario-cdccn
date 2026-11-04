@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquetación cdccn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Página */
+    --page-bg: #0b0b0d;
+    --page-text: #e7e5e4;
+    --page-muted: #8a8780;
+
+    /* App */
+    --bg: #0e0e0f;
+    --card: #171717;
+    --card-2: #1f1f1f;
+    --line: #2a2a2a;
+    --text: #f2f2f2;
+    --muted: #8b8b8b;
+    --faint: #4a4a4a;
+
+    /* Color principal: amarillo */
+    --yellow: #FACC15;
+    --on-yellow: #1a1500;
+    --i0: #272314;          /* sin marcar */
+    --i1: #5A4D16;          /* intensidad 1 */
+    --i2: #9F8315;          /* intensidad 2 */
+    --i3: #FACC15;          /* intensidad 3 */
+
+    /* Eventos: verde esmeralda */
+    --green: #34D399;
+    --e1: rgba(52, 211, 153, .16);
+    --e2: rgba(52, 211, 153, .30);
+    --e3: rgba(52, 211, 153, .46);
+
+    --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--page-bg);
+    color: var(--page-text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Página ---------- */
+  .page-head {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 40px 16px 8px;
+  }
+  .page-head h1 {
+    font-size: 28px;
+    margin: 0 0 8px;
+    letter-spacing: -.02em;
+  }
+  .page-head h1 span { color: var(--yellow); }
+  .page-head p {
+    margin: 0;
+    color: var(--page-muted);
+    max-width: 70ch;
+    line-height: 1.55;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--page-muted);
+  }
+  .legend .sw { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i {
+    width: 14px; height: 14px; border-radius: 4px; display: inline-block;
+  }
+
+  .gallery {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 16px 64px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px 40px;
+    justify-content: center;
+  }
+  figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  figcaption { max-width: 340px; text-align: left; width: 100%; }
+  figcaption b {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  figcaption b em {
+    font-style: normal;
+    font-family: var(--mono);
+    color: var(--yellow);
+    margin-right: 6px;
+  }
+  figcaption span { color: var(--page-muted); font-size: 13px; line-height: 1.5; }
+
+  /* ---------- Teléfono ---------- */
+  .phone {
+    width: 340px;
+    height: 760px;
+    padding: 8px;
+    border-radius: 46px;
+    background: #000;
+    box-shadow: 0 0 0 1px #2c2c2c, 0 30px 60px rgba(0,0,0,.55);
+    flex: none;
+  }
+  @media (max-width: 380px) {
+    .phone { zoom: .9; }
+  }
+  .screen {
+    position: relative;
+    height: 100%;
+    border-radius: 38px;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+  }
+  .statusbar {
+    height: 34px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 24px 0;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .bars { display: flex; gap: 2px; align-items: flex-end; height: 11px; }
+  .bars i { width: 3px; background: var(--text); border-radius: 1px; }
+  .battery {
+    width: 22px; height: 11px; border: 1.5px solid var(--text); border-radius: 3px;
+    position: relative; padding: 1px;
+  }
+  .battery::before { content: ""; display: block; height: 100%; width: 80%; background: var(--text); border-radius: 1px; }
+  .battery::after { content: ""; position: absolute; right: -4px; top: 3px; width: 2px; height: 4px; background: var(--text); border-radius: 0 1px 1px 0; }
+
+  .navbar {
+    height: 40px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 64px;
+    color: #9a9a9a;
+  }
+  .navbar .sq { width: 13px; height: 13px; border-radius: 3px; background: currentColor; }
+  .navbar .ci { width: 17px; height: 17px; border-radius: 50%; border: 2.5px solid currentColor; }
+  .navbar .tr { width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-right: 12px solid currentColor; }
+
+  .content {
+    flex: 1;
+    overflow: hidden;
+    padding: 4px 14px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  svg.ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  /* ---------- Pantalla principal ---------- */
+  .toprow { display: flex; justify-content: flex-end; gap: 10px; }
+  .round-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--card-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    display: grid; place-items: center;
+  }
+  .app-head { display: flex; align-items: center; gap: 14px; }
+  .app-icon {
+    width: 52px; height: 52px; border-radius: 16px;
+    background: #2e2810;
+    color: var(--yellow);
+    display: grid; place-items: center;
+    flex: none;
+  }
+  .app-icon svg.ic { width: 28px; height: 28px; }
+  .titles { flex: 1; min-width: 0; }
+  .titles h2 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -.02em; color: #d9d9d9; }
+  .titles p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+
+  .check-btn {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: grid; place-items: center;
+    border: 2px solid var(--yellow);
+    color: var(--yellow);
+    flex: none;
+  }
+  .check-btn svg.ic { width: 24px; height: 24px; stroke-width: 2.6; }
+  .check-btn.i0 { background: transparent; }
+  .check-btn.i1 { background: var(--i1); color: var(--yellow); }
+  .check-btn.i2 { background: var(--i2); color: var(--on-yellow); }
+  .check-btn.i3 { background: var(--i3); color: var(--on-yellow); }
+
+  .card {
+    background: var(--card);
+    border: 1px solid #222;
+    border-radius: 22px;
+  }
+
+  /* Mapa de actividad */
+  .heat { padding: 10px 12px 10px 8px; }
+  .heat-grid {
+    display: grid;
+    grid-template-columns: 24px repeat(21, minmax(0, 1fr));
+    gap: 2.5px;
+  }
+  .heat-grid .mlabel {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: visible;
+    width: 0;
+    height: 13px;
+    line-height: 13px;
+  }
+  .heat-grid .dlabel {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--muted);
+    line-height: 1;
+    align-self: center;
+  }
+  .heat-grid .hc {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    background: var(--i0);
+  }
+  .hc.i1 { background: var(--i1) !important; }
+  .hc.i2 { background: var(--i2) !important; }
+  .hc.i3 { background: var(--i3) !important; }
+  .hc.fut { background: transparent !important; box-shadow: inset 0 0 0 1px #1f1f1f; }
+  /* Eventos en el mapa: el verde rodea la casilla y llena el espacio entre casillas;
+     el amarillo de la casilla queda encima, sin mezclarse */
+  .hc.ev1 { --evc: var(--e1); }
+  .hc.ev2 { --evc: var(--e2); }
+  .hc.ev3 { --evc: var(--e3); }
+  .hc.evx { box-shadow: 0 0 0 1.5px var(--evc); border-radius: 2px; }
+  .hc.evx.blank { background: var(--evc); }
+  .hc.today { box-shadow: 0 0 0 1.5px var(--text); }
+
+  .chips { display: flex; gap: 8px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #2a2410;
+    color: var(--yellow);
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .chip svg.ic { width: 17px; height: 17px; }
+
+  /* Calendario mensual */
+  .month { padding: 12px 10px 8px; }
+  .wk, .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+  .wk span {
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: #bdbdbd;
+    padding-bottom: 6px;
+  }
+  .day {
+    position: relative;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    padding-top: 2px;
+  }
+  .day .num {
+    width: 30px; height: 28px;
+    border-radius: 9px;
+    display: grid; place-items: center;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: #d6d6d6;
+    position: relative;
+    z-index: 1;
+  }
+  .day.i1 .num { background: var(--i1); color: #fff; }
+  .day.i2 .num { background: var(--i2); color: #fff; }
+  .day.i3 .num { background: var(--i3); color: var(--on-yellow); font-weight: 600; }
+  /* Días de otro mes: solo se atenúa el número; el amarillo queda sólido para no mezclarse con el verde */
+  .day.other .num { color: #6a6a6a; }
+  .day.other.i1 .num, .day.other.i2 .num { color: #cfcfcf; }
+  .day.fut .num { color: var(--faint); }
+  .day.today .num { box-shadow: 0 0 0 2px var(--yellow); }
+  .day.pressed .num { box-shadow: 0 0 0 2px #fff; }
+  .day .dot {
+    position: absolute;
+    bottom: 3px; left: 50%;
+    width: 4px; height: 4px; margin-left: -2px;
+    border-radius: 50%;
+    background: var(--yellow);
+  }
+  .day.i3 .dot { background: var(--on-yellow); }
+  /* Franja de evento: detrás del número, ocupa toda la fila */
+  .day .ev {
+    position: absolute;
+    left: 0; right: 0;
+    top: 0;
+    height: 32px;
+    z-index: 0;
+  }
+  .day .ev.l { left: 2px; border-top-left-radius: 11px; border-bottom-left-radius: 11px; }
+  .day .ev.r { right: 2px; border-top-right-radius: 11px; border-bottom-right-radius: 11px; }
+  .ev.e1 { background: var(--e1); }
+  .ev.e2 { background: var(--e2); }
+  .ev.e3 { background: var(--e3); }
+
+  .month-ctrl {
+    display: flex; gap: 8px; align-items: center;
+    margin-top: 8px;
+  }
+  .pill {
+    height: 40px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--text);
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 0 14px;
+    font-family: var(--mono);
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .pill.grow { flex: 1; justify-content: space-between; }
+  .pill.circle { width: 40px; padding: 0; }
+  .pill.filled { background: #262626; }
+  .hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: 11.5px;
+    margin: 8px 0 2px;
+  }
+
+  .notes-empty {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px;
+  }
+  .notes-empty .app-icon { width: 48px; height: 48px; border-radius: 14px; }
+  .notes-empty .app-icon svg.ic { width: 22px; height: 22px; }
+  .notes-empty b { display: block; font-size: 16px; font-weight: 600; }
+  .notes-empty span { color: var(--muted); font-size: 13px; }
+
+  /* ---------- Pantalla de bloqueo ---------- */
+  .lock {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 56px 28px 24px;
+  }
+  .lock .app-icon { width: 72px; height: 72px; border-radius: 22px; }
+  .lock .app-icon svg.ic { width: 36px; height: 36px; }
+  .lock h2 { margin: 18px 0 4px; font-size: 24px; color: #d9d9d9; }
+  .lock p { margin: 0; color: var(--muted); }
+  .pin-dots { display: flex; gap: 18px; margin: 34px 0 44px; }
+  .pin-dots i {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid var(--yellow);
+  }
+  .pin-dots i.on { background: var(--yellow); }
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 72px);
+    gap: 16px 28px;
+  }
+  .key {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: var(--card-2);
+    display: grid; place-items: center;
+    font-family: var(--mono);
+    font-size: 26px;
+    color: var(--text);
+  }
+  .key.ghost { background: transparent; color: var(--muted); }
+  .key.finger { background: #2a2410; color: var(--yellow); }
+  .key svg.ic { width: 26px; height: 26px; }
+
+  /* ---------- Panel de opciones del día ---------- */
+  .dimmed { position: absolute; inset: 0; display: flex; flex-direction: column; isolation: isolate; z-index: 0; }
+  .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.6); z-index: 1; }
+  .sheet {
+    position: absolute;
+    z-index: 2;
+    left: 6px; right: 6px; bottom: 6px;
+    background: #1b1b1b;
+    border: 1px solid #2c2c2c;
+    border-radius: 28px;
+    padding: 10px 16px 16px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .handle { width: 44px; height: 5px; border-radius: 3px; background: #444; margin: 0 auto 2px; }
+  .sheet-head { display: flex; align-items: center; gap: 12px; }
+  .sheet-head .app-icon { width: 48px; height: 48px; border-radius: 14px; }
+  .sheet-head .app-icon svg.ic { width: 24px; height: 24px; }
+  .sheet-head b { display: block; font-size: 18px; font-weight: 600; }
+  .sheet-head span { font-family: var(--mono); font-size: 12px; color: #c9c9c9; white-space: nowrap; }
+  .sheet-head .check-btn { margin-left: auto; }
+  .sec-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin: 0 0 8px;
+    font-weight: 600;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .feat {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    border: 1px solid var(--line);
+    color: #cfcfcf;
+  }
+  .feat.on { background: #2a2410; border-color: #4a3f12; color: var(--yellow); }
+  .feat svg.ic { width: 14px; height: 14px; stroke-width: 2.6; }
+  .event-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    background: rgba(52, 211, 153, .14);
+    color: var(--green);
+  }
+  .event-pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+  .note {
+    background: var(--card-2);
+    border-radius: 14px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #e2e2e2;
+  }
+  .note + .note { margin-top: 6px; }
+  .note .meta { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .note .tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #2b2b2b;
+    color: #bdbdbd;
+  }
+  .note .tag i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; vertical-align: 1px; }
+  .textarea {
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 12px 14px;
+    height: 64px;
+    color: #7c7c7c;
+    font-size: 14px;
+  }
+  .sheet-actions { display: flex; gap: 10px; }
+  .save {
+    flex: 1;
+    height: 52px;
+    border-radius: 999px;
+    background: var(--yellow);
+    color: var(--on-yellow);
+    display: grid; place-items: center;
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  /* ---------- Ajustes ---------- */
+  .settings-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+  .settings-head h2 { margin: 0; font-size: 22px; }
+  .group-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); font-weight: 600; margin: 6px 4px -4px;
+  }
+  .group { padding: 4px 0; }
+  .row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+  }
+  .row + .row { border-top: 1px solid #222; }
+  .row .ico {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: #2a2410; color: var(--yellow);
+    display: grid; place-items: center; flex: none;
+  }
+  .row .ico svg.ic { width: 18px; height: 18px; }
+  .row .ico.green { background: rgba(52,211,153,.14); color: var(--green); }
+  .row .txt { flex: 1; min-width: 0; }
+  .row .txt b { display: block; font-weight: 500; font-size: 14px; }
+  .row .txt span { font-size: 12px; color: var(--muted); }
+  .row .chev { color: var(--faint); }
+  .row.disabled { opacity: .4; }
+  .segment {
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: #0f0f0f; border: 1px solid var(--line);
+    border-radius: 12px; padding: 3px; margin: 0 14px 12px;
+  }
+  .segment span {
+    text-align: center; padding: 8px 0; border-radius: 9px;
+    font-size: 13px; color: var(--muted);
+  }
+  .segment span.on { background: var(--yellow); color: var(--on-yellow); font-weight: 600; }
+  .version { text-align: center; color: var(--faint); font-family: var(--mono); font-size: 11px; margin-top: 4px; }
+
+  /* ---------- Widgets (pantalla de inicio de Android) ---------- */
+  .home {
+    flex: 1;
+    display: flex; flex-direction: column;
+    padding: 30px 18px 10px;
+    background:
+      radial-gradient(120% 60% at 0% 0%, rgba(250,204,21,.18), transparent 60%),
+      radial-gradient(90% 60% at 100% 100%, rgba(52,211,153,.16), transparent 60%),
+      #101012;
+  }
+  .clock { font-size: 64px; font-weight: 300; letter-spacing: -.03em; line-height: 1; }
+  .date { color: #c9c9c9; margin: 6px 0 26px; font-size: 14px; }
+  .widgets { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .widget {
+    background: rgba(23,23,23,.92);
+    border: 1px solid #2a2a2a;
+    border-radius: 26px;
+    padding: 14px;
+  }
+  .w-mark { aspect-ratio: 1; display: flex; flex-direction: column; justify-content: space-between; }
+  .w-mark .top { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #d9d9d9; }
+  .w-mark .top .app-icon { width: 28px; height: 28px; border-radius: 9px; }
+  .w-mark .top .app-icon svg.ic { width: 16px; height: 16px; }
+  .w-mark .check-btn { width: 64px; height: 64px; align-self: center; }
+  .w-mark .check-btn svg.ic { width: 30px; height: 30px; }
+  .w-mark .foot { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .w-mark .foot b { color: var(--yellow); font-weight: 500; }
+  .w-side { display: flex; flex-direction: column; gap: 14px; }
+  .w-small {
+    flex: 1;
+    display: flex; flex-direction: column; justify-content: center; gap: 4px;
+  }
+  .w-small .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+  .w-small .big { white-space: nowrap; font-family: var(--mono); font-size: 18px; color: var(--yellow); display: flex; align-items: center; gap: 6px; }
+  .w-note {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .w-note .app-icon { width: 42px; height: 42px; border-radius: 13px; }
+  .w-note .app-icon svg.ic { width: 20px; height: 20px; }
+  .w-note .field { flex: 1; color: #8b8b8b; font-size: 14px; }
+  .w-note .field b { display: block; color: #e5e5e5; font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+  .w-note .plus {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--yellow); color: var(--on-yellow);
+    display: grid; place-items: center;
+  }
+  .dock {
+    margin-top: auto;
+    display: flex; justify-content: space-around;
+    padding: 12px 6px 4px;
+  }
+  .dock i { width: 48px; height: 48px; border-radius: 15px; background: rgba(255,255,255,.08); }
+  .wlabel { font-size: 10.5px; color: #8b8b8b; text-align: center; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <h1>Maquetación · <span>calendario-cdccn</span></h1>
+  <p>Vista previa solo visual de la app Android, basada en <code>hu.md</code>, <code>casos-de-uso.md</code> y las imágenes de <code>media/</code>. No hay nada funcional: los botones y los datos son de ejemplo. El día de "hoy" es el miércoles 4 de noviembre de 2026.</p>
+  <div class="legend">
+    <span class="sw"><i style="background:var(--i0)"></i>Sin marcar</span>
+    <span class="sw"><i style="background:var(--i1)"></i>Intensidad 1</span>
+    <span class="sw"><i style="background:var(--i2)"></i>Intensidad 2</span>
+    <span class="sw"><i style="background:var(--i3)"></i>Intensidad 3</span>
+    <span class="sw"><i style="background:var(--e1)"></i>1 evento</span>
+    <span class="sw"><i style="background:var(--e2)"></i>2 eventos</span>
+    <span class="sw"><i style="background:var(--e3)"></i>3+ eventos</span>
+  </div>
+</header>
+
+<main class="gallery">
+
+  <!-- 1. Pantalla de bloqueo -->
+  <figure>
+    <div class="phone"><div class="screen">
+      <div class="statusbar" data-status></div>
+      <div class="lock">
+        <div class="app-icon"><svg class="ic" data-icon="people"></svg></div>
+        <h2>Interacción</h2>
+        <p>Ingresa tu PIN</p>
+        <div class="pin-dots"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+        <div class="keypad">
+          <div class="key">1</div><div class="key">2</div><div class="key">3</div>
+          <div class="key">4</div><div class="key">5</div><div class="key">6</div>
+          <div class="key">7</div><div class="key">8</div><div class="key">9</div>
+          <div class="key finger"><svg class="ic" data-icon="fingerprint"></svg></div>
+          <div class="key">0</div>
+          <div class="key ghost"><svg class="ic" data-icon="backspace"></svg></div>
+        </div>
+      </div>
+      <div class="navbar"><i class="sq"></i><i class="ci"></i><i class="tr"></i></div>
+    </div></div>
+    <figcaption>
+      <b><em>01</em>Pantalla de bloqueo</b>
+      <span>Solo en modo protegido. PIN de 4 dígitos; la huella se usa únicamente si pulsas su botón, nunca se abre sola. Sin límite de intentos.</span>
+    </figcaption>
+  </figure>
+
+  <!-- 2. Pantalla principal -->
+  <figure>
+    <div class="phone"><div class="screen" id="main-screen">
+      <div class="statusbar" data-status></div>
+      <div class="content" id="main-content">
+        <div class="toprow">
+          <div class="round-btn" title="Estadísticas"><svg class="ic" data-icon="stats"></svg></div>
+          <div class="round-btn" title="Buscar"><svg class="ic" data-icon="search"></svg></div>
+          <div class="round-btn" title="Ajustes"><svg class="ic" data-icon="settings"></svg></div>
+        </div>
+        <div class="app-head">
+          <div class="app-icon"><svg class="ic" data-icon="people"></svg></div>
+          <div class="titles"><h2>Interacción</h2><p>Sin descripción</p></div>
+          <div class="check-btn i2" title="Hoy: intensidad 2"><svg class="ic" data-icon="check"></svg></div>
+        </div>
+        <section class="card heat"><div class="heat-grid" data-heat></div></section>
+        <div class="chips"><span class="chip"><svg class="ic" data-icon="flame"></svg>5 días</span></div>
+        <section class="card month">
+          <div class="wk"><span>lun</span><span>mar</span><span>mié</span><span>jue</span><span>vie</span><span>sáb</span><span>dom</span></div>
+          <div class="days" data-month></div>
+          <div class="month-ctrl">
+            <div class="pill grow">nov 2026 <svg class="ic" data-icon="down"></svg></div>
+            <div class="pill">Hoy</div>
+            <div class="pill circle filled"><svg class="ic" data-icon="left"></svg></div>
+            <div class="pill circle"><svg class="ic" data-icon="right"></svg></div>
+          </div>
+          <p class="hint">Toca un día para marcarlo · Mantén pulsado para ver sus opciones</p>
+        </section>
+        <section class="card notes-empty">
+          <div class="app-icon"><svg class="ic" data-icon="edit"></svg></div>
+          <div><b>Notas del día</b><span>Mantén pulsado un día para verlas</span></div>
+        </section>
+      </div>
+      <div class="navbar"><i class="sq"></i><i class="ci"></i><i class="tr"></i></div>
+    </div></div>
+    <figcaption>
+      <b><em>02</em>Pantalla principal</b>
+      <span>Arriba: estadísticas, búsqueda y ajustes. Palomita de hoy (intensidad 2), mapa de 5 meses (también con eventos: vacaciones en agosto y dos eventos cruzados en septiembre), racha y calendario. Los eventos pintan de verde el fondo detrás de los días y se intensifican donde se cruzan (1 y 2 de nov). Los días futuros no se pueden marcar.</span>
+    </figcaption>
+  </figure>
+
+  <!-- 3. Opciones del día -->
+  <figure>
+    <div class="phone"><div class="screen">
+      <div class="dimmed" id="sheet-bg"></div>
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sheet-head">
+          <div class="app-icon"><svg class="ic" data-icon="people"></svg></div>
+          <div><b>Interacción</b><span>lun, 2 de nov de 2026</span></div>
+          <div class="check-btn i3"><svg class="ic" data-icon="check"></svg></div>
+        </div>
+        <div>
+          <p class="sec-title">Características</p>
+          <div class="tags">
+            <span class="feat on"><svg class="ic" data-icon="check"></svg>Sacar un contacto</span>
+            <span class="feat on"><svg class="ic" data-icon="check"></svg>Conocer a alguien nuevo</span>
+            <span class="feat">Salir con alguien nuevo</span>
+            <span class="feat">Iniciar conversación</span>
+          </div>
+        </div>
+        <div>
+          <p class="sec-title">Eventos</p>
+          <div class="tags">
+            <span class="event-pill"><i></i>Viaje puerto</span>
+            <span class="event-pill"><i></i>Fiesta de Ana</span>
+          </div>
+        </div>
+        <div>
+          <p class="sec-title">Notas</p>
+          <div class="note">
+            Platiqué con Ana en el café del malecón; quedamos de vernos el jueves.
+            <div class="meta"><span class="tag"><i style="background:#FACC15"></i>contacto</span><span class="tag"><i style="background:#60A5FA"></i>café</span></div>
+          </div>
+          <div class="note">
+            Me costó iniciar la plática en el grupo, pero al final fluyó.
+            <div class="meta"><span class="tag"><i style="background:#F87171"></i>reto</span></div>
+          </div>
+        </div>
+        <div class="textarea">¿Qué fue bien? ¿Qué se interpuso?</div>
+        <div class="sheet-actions">
+          <div class="round-btn" style="width:52px;height:52px"><svg class="ic" data-icon="calendar"></svg></div>
+          <div class="save">Guardar</div>
+        </div>
+      </div>
+    </div></div>
+    <figcaption>
+      <b><em>03</em>Opciones del día</b>
+      <span>Al mantener pulsado el 2 de noviembre: su palomita (mismo ciclo 0→1→2→3→0), características, eventos, notas con varias etiquetas y campo para una nota nueva.</span>
+    </figcaption>
+  </figure>
+
+  <!-- 4. Ajustes -->
+  <figure>
+    <div class="phone"><div class="screen">
+      <div class="statusbar" data-status></div>
+      <div class="content">
+        <div class="settings-head">
+          <div class="round-btn"><svg class="ic" data-icon="left"></svg></div>
+          <h2>Ajustes</h2>
+        </div>
+
+        <p class="group-title">Calendario</p>
+        <section class="card group">
+          <div class="row">
+            <div class="ico"><svg class="ic" data-icon="people"></svg></div>
+            <div class="txt"><b>Nombre, descripción e ícono</b><span>Interacción · Sin descripción</span></div>
+            <svg class="ic chev" data-icon="right"></svg>
+          </div>
+        </section>
+
+        <p class="group-title">Seguridad</p>
+        <section class="card group">
+          <div class="row">
+            <div class="ico"><svg class="ic" data-icon="shield"></svg></div>
+            <div class="txt"><b>Modo de acceso</b><span>Libre abre directo al calendario</span></div>
+          </div>
+          <div class="segment"><span class="on">Libre</span><span>Protegido</span></div>
+          <div class="row disabled">
+            <div class="ico"><svg class="ic" data-icon="key"></svg></div>
+            <div class="txt"><b>Cambiar PIN</b><span>Disponible en modo protegido</span></div>
+            <svg class="ic chev" data-icon="right"></svg>
+          </div>
+        </section>
+
+        <p class="group-title">Registro</p>
+        <section class="card group">
+          <div class="row">
+            <div class="ico"><svg class="ic" data-icon="list"></svg></div>
+            <div class="txt"><b>Características</b><span>4 activas · 1 archivada</span></div>
+            <svg class="ic chev" data-icon="right"></svg>
+          </div>
+          <div class="row">
+            <div class="ico"><svg class="ic" data-icon="tag"></svg></div>
+            <div class="txt"><b>Etiquetas</b><span>6 etiquetas</span></div>
+            <svg class="ic chev" data-icon="right"></svg>
+          </div>
+        </section>
+
+        <p class="group-title">Datos</p>
+        <section class="card group">
+          <div class="row">
+            <div class="ico green"><svg class="ic" data-icon="cloud"></svg></div>
+            <div class="txt"><b>Google Drive</b><span>Sincronizado hace 2 min · cdccn/cdccn-datos.json</span></div>
+          </div>
+          <div class="row">
+            <div class="ico"><svg class="ic" data-icon="download"></svg></div>
+            <div class="txt"><b>Exportar datos</b><span>Genera un archivo JSON</span></div>
+            <svg class="ic chev" data-icon="right"></svg>
+          </div>
+          <div class="row">
+            <div class="ico"><svg class="ic" data-icon="upload"></svg></div>
+            <div class="txt"><b>Importar datos</b><span>Reemplaza todos los datos actuales</span></div>
+            <svg class="ic chev" data-icon="right"></svg>
+          </div>
+        </section>
+        <p class="version">cdccn · v0.1</p>
+      </div>
+      <div class="navbar"><i class="sq"></i><i class="ci"></i><i class="tr"></i></div>
+    </div></div>
+    <figcaption>
+      <b><em>04</em>Ajustes</b>
+      <span>Nombre, descripción e ícono del calendario; modo de acceso libre (por defecto) o protegido, cambiar PIN, catálogo de características y etiquetas, estado de Google Drive y exportar/importar manual.</span>
+    </figcaption>
+  </figure>
+
+  <!-- 5. Widgets -->
+  <figure>
+    <div class="phone"><div class="screen">
+      <div class="statusbar" data-status></div>
+      <div class="home">
+        <div class="clock">22:40</div>
+        <div class="date">miércoles, 4 de noviembre</div>
+        <div class="widgets">
+          <div>
+            <div class="widget w-mark">
+              <div class="top"><div class="app-icon"><svg class="ic" data-icon="people"></svg></div>Interacción</div>
+              <div class="check-btn i2"><svg class="ic" data-icon="check"></svg></div>
+              <div class="foot"><span>Hoy</span><b>nivel 2</b></div>
+            </div>
+            <div class="wlabel">Marcar día</div>
+          </div>
+          <div class="w-side">
+            <div class="widget w-small">
+              <span class="lbl">Racha</span>
+              <span class="big"><svg class="ic" data-icon="flame"></svg>5 días</span>
+            </div>
+            <div class="widget w-small">
+              <span class="lbl">Esta semana</span>
+              <span class="big" style="gap:4px">
+                <i style="width:14px;height:14px;border-radius:3px;background:var(--i3)"></i>
+                <i style="width:14px;height:14px;border-radius:3px;background:var(--i1)"></i>
+                <i style="width:14px;height:14px;border-radius:3px;background:var(--i2)"></i>
+                <i style="width:14px;height:14px;border-radius:3px;background:var(--i0)"></i>
+              </span>
+            </div>
+          </div>
+          <div style="grid-column: 1 / -1">
+            <div class="widget w-note">
+              <div class="app-icon"><svg class="ic" data-icon="edit"></svg></div>
+              <div class="field"><b>Nota del día</b>¿Qué fue bien hoy?</div>
+              <div class="plus"><svg class="ic" data-icon="plus"></svg></div>
+            </div>
+            <div class="wlabel">Nota del día</div>
+          </div>
+        </div>
+        <div class="dock"><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="navbar"><i class="sq"></i><i class="ci"></i><i class="tr"></i></div>
+    </div></div>
+    <figcaption>
+      <b><em>05</em>Widgets</b>
+      <span>"Marcar día" sube la intensidad de hoy con cada toque y "Nota del día" abre un editor rápido; ninguno pide desbloqueo. Los widgets pequeños de racha y semana son una idea opcional.</span>
+    </figcaption>
+  </figure>
+
+</main>
+
+<script>
+/* ---------- Íconos ---------- */
+const ICONS = {
+  people: '<circle cx="7" cy="5.5" r="2.5"/><circle cx="17" cy="5.5" r="2.5"/><path d="M4 21v-7a3 3 0 0 1 3-3h1"/><path d="M20 21v-7a3 3 0 0 0-3-3h-1"/><path d="M9 15h6"/><path d="m11 13-2 2 2 2"/><path d="m13 13 2 2-2 2"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  edit: '<path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.4 2.6a2 2 0 0 1 3 3L12 15l-4 1 1-4Z"/>',
+  settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  down: '<path d="m6 9 6 6 6-6"/>',
+  left: '<path d="m15 18-6-6 6-6"/>',
+  right: '<path d="m9 18 6-6-6-6"/>',
+  fingerprint: '<path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .13-5.35 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/>',
+  backspace: '<path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="m18 9-6 6"/><path d="m12 9 6 6"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  plus: '<path d="M5 12h14M12 5v14"/>',
+  stats: '<path d="M3 3v18h18"/><path d="M8 17v-5"/><path d="M13 17V8"/><path d="M18 17v-8"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+  key: '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  tag: '<path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5"/>',
+  cloud: '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+  upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
+};
+function paintIcons(root) {
+  root.querySelectorAll('svg[data-icon]').forEach(svg => {
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.innerHTML = ICONS[svg.dataset.icon] || '';
+  });
+}
+
+/* ---------- Barra de estado ---------- */
+document.querySelectorAll('[data-status]').forEach(el => {
+  el.innerHTML = '<span>22:40</span><span class="status-icons"><span class="bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8px"></i><i style="height:11px"></i></span><span class="battery"></span></span>';
+});
+
+/* ---------- Datos de ejemplo ---------- */
+const TODAY = new Date(2026, 10, 4);
+const key = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+
+const INTENSITY = {
+  '2026-10-26': 1, '2026-10-27': 0, '2026-10-28': 2, '2026-10-29': 3, '2026-10-30': 0,
+  '2026-10-31': 1, '2026-11-01': 2, '2026-11-02': 3, '2026-11-03': 1, '2026-11-04': 2,
+};
+const NOTES = new Set(['2026-10-28', '2026-11-02', '2026-11-03']);
+const EVENTS = [
+  { name: 'Vacaciones',    start: '2026-08-10', end: '2026-08-16' },
+  { name: 'Curso de baile', start: '2026-09-21', end: '2026-09-23' },
+  { name: 'Congreso',      start: '2026-09-22', end: '2026-09-25' },
+  { name: 'Viaje puerto',  start: '2026-10-30', end: '2026-11-02' },
+  { name: 'Fiesta de Ana', start: '2026-11-01', end: '2026-11-02' },
+  { name: 'Exámenes',      start: '2026-11-09', end: '2026-11-13' },
+];
+const eventsOn = k => EVENTS.filter(e => e.start <= k && k <= e.end).length;
+
+// Generador pseudoaleatorio con semilla, para que el mapa siempre se vea igual
+let seed = 17;
+const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+function intensityFor(d) {
+  const k = key(d);
+  if (k in INTENSITY) return INTENSITY[k];
+  const r = rnd();
+  return r < .5 ? 0 : r < .72 ? 1 : r < .9 ? 2 : 3;
+}
+
+/* ---------- Mapa de actividad: 21 semanas (~5 meses) ---------- */
+const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+function renderHeat(el) {
+  const weeks = 21;
+  const thisMonday = addDays(TODAY, -((TODAY.getDay() + 6) % 7));
+  const start = addDays(thisMonday, -7 * (weeks - 1));
+  const labels = ['Lun', '', 'Mié', '', 'Vie', '', ''];
+  let html = '<span></span>';
+  for (let w = 0; w < weeks; w++) {
+    let label = '';
+    for (let d = 0; d < 7; d++) {
+      const day = addDays(start, w * 7 + d);
+      if (day.getDate() === 1) label = MONTHS[day.getMonth()];
+    }
+    html += '<span class="mlabel">' + label + '</span>';
+  }
+  const cells = [];
+  for (let w = 0; w < weeks; w++) {
+    cells[w] = [];
+    for (let d = 0; d < 7; d++) cells[w][d] = addDays(start, w * 7 + d);
+  }
+  for (let d = 0; d < 7; d++) {
+    html += '<span class="dlabel">' + labels[d] + '</span>';
+    for (let w = 0; w < weeks; w++) {
+      const day = cells[w][d];
+      let cls = 'hc';
+      if (day > TODAY) cls += ' fut';
+      else {
+        const i = intensityFor(day);
+        cls += i ? ' i' + i : ' blank';
+        const n = eventsOn(key(day));
+        if (n) cls += ' evx ev' + Math.min(n, 3);
+        if (key(day) === key(TODAY)) cls += ' today';
+      }
+      html += '<span class="' + cls + '"></span>';
+    }
+  }
+  el.innerHTML = html;
+}
+
+/* ---------- Calendario mensual: noviembre 2026 ---------- */
+function renderMonth(el) {
+  const first = new Date(2026, 10, 1);
+  const start = addDays(first, -((first.getDay() + 6) % 7));
+  let html = '';
+  for (let i = 0; i < 42; i++) {
+    const day = addDays(start, i);
+    const k = key(day);
+    const col = i % 7;
+    let cls = 'day';
+    if (day.getMonth() !== 10) cls += ' other';
+    if (day > TODAY) cls += ' fut';
+    else {
+      const it = INTENSITY[k] || 0;
+      if (it) cls += ' i' + it;
+    }
+    if (k === key(TODAY)) cls += ' today';
+
+    let inner = '<span class="num">' + day.getDate() + (NOTES.has(k) ? '<span class="dot"></span>' : '') + '</span>';
+    const n = eventsOn(k);
+    if (n) {
+      const prev = col > 0 && eventsOn(key(addDays(day, -1))) > 0;
+      const next = col < 6 && eventsOn(key(addDays(day, 1))) > 0;
+      inner += '<span class="ev e' + Math.min(n, 3) + (prev ? '' : ' l') + (next ? '' : ' r') + '"></span>';
+    }
+    html += '<div class="' + cls + '" data-date="' + k + '">' + inner + '</div>';
+  }
+  el.innerHTML = html;
+}
+
+document.querySelectorAll('[data-heat]').forEach(renderHeat);
+document.querySelectorAll('[data-month]').forEach(renderMonth);
+paintIcons(document);
+
+/* ---------- Fondo del panel de opciones: copia de la pantalla principal ---------- */
+const bg = document.getElementById('sheet-bg');
+const clone = document.getElementById('main-screen').cloneNode(true);
+clone.removeAttribute('id');
+clone.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+const pressed = clone.querySelector('[data-date="2026-11-02"]');
+if (pressed) pressed.classList.add('pressed');
+bg.append(...clone.childNodes);
+</script>
+</body>
+</html>
