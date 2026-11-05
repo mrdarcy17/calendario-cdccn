@@ -8,7 +8,9 @@ Para ayudarme a socializar, quiero hacer una aplicación para poder visualizar y
 
 ## HU-01 — Contraseña
 
-Quiero que al ingresar a la aplicación en el móvil me pida un **PIN de 4 dígitos** que yo escoja. El uso de la **huella dactilar** será **opcional**: en la pantalla del PIN habrá un botón de huella y el cuadro de huella solo aparecerá si lo pulso.
+Quiero que al ingresar a la aplicación en el móvil me pida un **PIN de 4 dígitos** que yo escoja. El uso de la **huella dactilar** será **opcional**: en la pantalla del PIN habrá un botón de huella. En ajustes podré activar que el lector de huella **se abra solo al entrar**.
+
+Cada vez que salga de la app (o apague y encienda el teléfono) y vuelva a entrar, me pedirá el PIN otra vez.
 
 ## HU-02 — Ajustes
 

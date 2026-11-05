@@ -50,6 +50,8 @@ dependencies {
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     // Inicio de sesión de Google en Android (permiso drive.file para Google Drive)
     implementation "com.google.android.gms:play-services-auth:22.0.0"
+    // Huella para desbloquear la app
+    implementation "androidx.biometric:biometric:1.1.0"
     implementation project(':capacitor-android')
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"

@@ -62,7 +62,7 @@
 - **Precondición:** PIN configurado y modo de acceso **protegido**.
 - **Flujo principal:**
   1. El usuario abre la app; se muestra la pantalla de bloqueo con el teclado del PIN y un **botón de huella**.
-  2. **No** se lanza ningún diálogo de huella automáticamente.
+  2. El diálogo de huella **no** se abre solo, salvo que esté activado el ajuste **"Abrir la huella al entrar"** (CU-03).
   3. El usuario ingresa el PIN.
   4. Se muestra directamente la **pantalla principal** (CU-05).
 - **Alternativos:**
@@ -71,8 +71,9 @@
   - 3c. PIN incorrecto → se muestra error y se puede reintentar de inmediato. **No hay límite de intentos** ni bloqueo temporal (en la huella sí aplica el límite propio de Android, pero el PIN siempre queda disponible).
   - 1a. El dispositivo no tiene huella registrada → no se muestra el botón de huella.
   - 1b. Modo de acceso **libre** → no se muestra la pantalla de bloqueo; la app abre directo a la pantalla principal (CU-05).
-- **Postcondición:** sesión desbloqueada. Si la app pasa a segundo plano, se vuelve a bloquear tras **1 minuto**; si se regresa antes, no pide PIN.
-- **Regla:** en modo protegido el PIN y la huella están siempre disponibles juntos (no se puede desactivar uno solo). La huella es opcional en el sentido de que solo se usa si el usuario pulsa su botón.
+- **Postcondición:** sesión desbloqueada. En cuanto la app pasa a segundo plano (cambiar de app, ir al inicio, apagar la pantalla o reiniciar el teléfono) se **bloquea al instante**: al volver se pide el PIN otra vez. No hay tiempo de espera. En "apps recientes" tampoco se ve el calendario.
+- **Excepción:** abrir algo del sistema desde la propia app (lector de huella, ventana de Google, compartir, elegir un archivo) no cuenta como salir.
+- **Regla:** en modo protegido el PIN y la huella están siempre disponibles juntos (no se puede desactivar uno solo). La huella es opcional: se usa al pulsar su botón o, si el ajuste está activo, se abre sola al entrar.
 
 ### CU-03 — Configurar acceso
 - **HU:** 01, 02 · **Actor:** Usuario · **Plataforma:** Móvil
@@ -83,6 +84,9 @@
   3. Si elige **Libre** → el PIN se **borra** y la app abrirá directo al calendario.
   4. Si elige **Protegido** → se ejecuta *Crear PIN* (ver abajo); no se reutiliza ningún PIN anterior.
   5. Se guarda el modo; el siguiente inicio de la app lo respeta.
+- **Flujo alternativo (abrir la huella al entrar, solo en modo protegido y si el teléfono tiene huella):**
+  1. El usuario activa en Ajustes → Seguridad el interruptor **"Abrir la huella al entrar"**.
+  2. Desde entonces, cada vez que entra a la app se abre el lector de huella sin pulsar su botón; si lo cancela, puede usar el PIN.
 - **Flujo alternativo (cambiar PIN, solo en modo protegido):**
   1. El usuario abre Ajustes → Seguridad → Cambiar PIN. **No se pide el PIN actual.**
   2. Se ejecuta *Crear PIN* (ver abajo).

@@ -32,6 +32,36 @@ function selectorIconos(objetivo: string, actual: string): string {
 
 // ---------- Ajustes ----------
 
+/** Modo de acceso y PIN (CU-03). Solo en Android. */
+function grupoSeguridad(e: Estado): string {
+  const libre = e.ui.seguridad.modo === 'libre';
+  return `
+    <p class="titulo-grupo">Seguridad</p>
+    <section class="tarjeta grupo">
+      <div class="fila">
+        <span class="ico">${icono('escudo')}</span>
+        <div class="txt"><b>Modo de acceso</b><span>${libre ? 'Libre: la app abre directo al calendario' : 'Protegido: pide el PIN cada vez que entras'}</span></div>
+      </div>
+      <div class="segmento" role="radiogroup" aria-label="Modo de acceso">
+        <button role="radio" aria-checked="${libre}" class="${libre ? 'on' : ''}" data-accion="modo-acceso" data-modo="libre">Libre</button>
+        <button role="radio" aria-checked="${!libre}" class="${libre ? '' : 'on'}" data-accion="modo-acceso" data-modo="protegido">Protegido</button>
+      </div>
+      <button class="fila boton-fila ${libre || !e.ui.huellaDisponible ? 'deshabilitada' : ''}" data-accion="huella-al-entrar" role="switch"
+        aria-checked="${!libre && e.ui.seguridad.huellaAlEntrar}" ${libre || !e.ui.huellaDisponible ? 'disabled' : ''}>
+        <span class="ico">${icono('huella')}</span>
+        <div class="txt"><b>Abrir la huella al entrar</b><span>${
+          libre ? 'Disponible en modo protegido' : !e.ui.huellaDisponible ? 'Tu teléfono no tiene huella registrada' : 'El lector aparece solo al abrir la app'
+        }</span></div>
+        <span class="interruptor ${!libre && e.ui.seguridad.huellaAlEntrar ? 'on' : ''}"></span>
+      </button>
+      <button class="fila boton-fila ${libre ? 'deshabilitada' : ''}" data-accion="cambiar-pin" ${libre ? 'disabled' : ''}>
+        <span class="ico">${icono('llave')}</span>
+        <div class="txt"><b>Cambiar PIN</b><span>${libre ? 'Disponible en modo protegido' : 'Escribe el nuevo PIN dos veces'}</span></div>
+        ${icono('derecha', 'chev')}
+      </button>
+    </section>`;
+}
+
 export function vistaAjustes(e: Estado, sync: Sincronizador): string {
   const d = e.datos;
   const activas = d.caracteristicas.filter((c) => !c.archivada);
@@ -80,6 +110,8 @@ export function vistaAjustes(e: Estado, sync: Sincronizador): string {
       ${e.ui.eligiendoIcono === 'calendario' ? selectorIconos('calendario', d.calendario.icono) : ''}
     </section>
 
+    ${esNativo ? grupoSeguridad(e) : ''}
+
     <p class="titulo-grupo">Características</p>
     <section class="tarjeta grupo">
       ${activas.map(filaCaracteristica).join('') || '<p class="fila tenue">Sin características.</p>'}
@@ -119,7 +151,7 @@ export function vistaAjustes(e: Estado, sync: Sincronizador): string {
         <input type="file" accept="application/json,.json" data-campo="importar" hidden>
       </label>
     </section>
-    <p class="nota-pie-vista">${esNativo ? 'PIN, huella y modo de acceso: próximamente.' : 'El PIN y el modo de acceso solo existen en la app Android.'}</p>`;
+    <p class="nota-pie-vista">${esNativo ? 'El PIN se guarda solo en este teléfono; nunca se sube a Drive.' : 'El PIN y el modo de acceso solo existen en la app Android.'}</p>`;
 }
 
 // ---------- Buscar ----------

@@ -2,6 +2,7 @@ import { ErrorAlmacen, type Almacen } from './almacen';
 import { hoy } from './datos/fechas';
 import { marcarModificado, paraGuardar, type Filtro } from './datos/operaciones';
 import type { Datos, Fecha, Plataforma } from './datos/tipos';
+import { CONFIG_INICIAL, type ConfigSeguridad } from './seguridad';
 
 export type Vista = 'principal' | 'buscar' | 'ajustes' | 'estadisticas';
 export type EstadoGuardado = 'cargando' | 'guardado' | 'pendiente' | 'guardando' | 'error';
@@ -22,6 +23,13 @@ export interface UI {
   filtro: Filtro;
   /** Primera conexión a Drive con datos distintos: resumen para elegir. */
   eleccionDrive: { local: ResumenDatos; remoto: ResumenDatos } | null;
+  /** Solo Android: modo de acceso y PIN (no se sincronizan). */
+  seguridad: ConfigSeguridad;
+  /** Pantalla de bloqueo: dígitos escritos y error. */
+  bloqueo: { activo: boolean; pin: string; error: string | null };
+  /** Creación o cambio de PIN: se escribe dos veces (CU-03). */
+  crearPin: { motivo: 'activar' | 'cambiar'; paso: 1 | 2; primero: string; pin: string; error: string | null } | null;
+  huellaDisponible: boolean;
   guardado: EstadoGuardado;
   errores: string[];
   aviso: string | null;
@@ -68,6 +76,10 @@ export class Estado {
       eligiendoIcono: null,
       filtro: {},
       eleccionDrive: null,
+      seguridad: { ...CONFIG_INICIAL },
+      bloqueo: { activo: false, pin: '', error: null },
+      crearPin: null,
+      huellaDisponible: false,
       guardado: 'cargando',
       errores: [],
       aviso: null,

@@ -477,3 +477,55 @@ mark { background: #5a4d16; color: #fff; border-radius: 3px; padding: 0 2px; }
 .opcion-eleccion:hover { border-color: var(--amarillo); }
 .opcion-eleccion .ico { width: 34px; height: 34px; border-radius: 10px; background: var(--amarillo-fondo); color: var(--amarillo); display: grid; place-items: center; }
 .opcion-eleccion span { font-size: 12.5px; }
+
+/* ---------- PIN y huella (Android) ---------- */
+.pantalla-pin {
+  position: fixed; inset: 0; z-index: 50;
+  background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: calc(24px + var(--sa-arriba)) 24px calc(24px + var(--sa-abajo));
+  text-align: center;
+}
+.pantalla-pin h1 { margin: 18px 0 4px; font-size: 24px; color: #d9d9d9; }
+.pantalla-pin p { margin: 0; color: var(--tenue); }
+.logo-caja { width: 72px; height: 72px; border-radius: 22px; background: #000; color: var(--amarillo); display: grid; place-items: center; border: 1px solid #222; }
+.logo-sarger { width: 46px; height: 46px; }
+.puntos-pin { display: flex; gap: 18px; margin: 32px 0 8px; }
+.puntos-pin i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--amarillo); transition: background .1s; }
+.puntos-pin i.lleno { background: var(--amarillo); }
+.puntos-pin.error { animation: sacudir .35s; }
+.puntos-pin.error i { border-color: var(--peligro); }
+@keyframes sacudir { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+.error-pin { min-height: 20px; margin: 0 0 22px !important; color: var(--peligro) !important; font-size: 13px; }
+.teclado { display: grid; grid-template-columns: repeat(3, 72px); gap: 16px 28px; }
+.tecla {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--tarjeta-2); display: grid; place-items: center;
+  font-family: var(--mono); font-size: 26px; color: var(--texto);
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+.tecla { transition: background .18s ease-out, color .18s ease-out, transform .1s; }
+.tecla:active, .tecla.pulsada { background: var(--amarillo); color: var(--sobre-amarillo); transform: scale(.94); transition: none; }
+.tecla.fantasma, .tecla.texto { background: transparent; color: var(--tenue); }
+.tecla.texto { font-family: var(--sans); font-size: 14px; }
+.tecla.huella { background: var(--amarillo-fondo); color: var(--amarillo); }
+.tecla svg.ic { width: 26px; height: 26px; }
+.tecla.vacia { background: none; }
+@media (max-height: 640px) {
+  .teclado { gap: 10px 24px; }
+  .tecla { width: 62px; height: 62px; }
+  .puntos-pin { margin-top: 20px; }
+}
+
+.segmento {
+  display: grid; grid-template-columns: 1fr 1fr;
+  background: #0f0f0f; border: 1px solid var(--linea);
+  border-radius: 12px; padding: 3px; margin: 0 14px 12px;
+}
+.segmento button { padding: 9px 0; border-radius: 9px; font-size: 13px; color: var(--tenue); }
+.segmento button.on { background: var(--amarillo); color: var(--sobre-amarillo); font-weight: 600; }
+.fila .chev { color: var(--muy-tenue); }
+.interruptor { width: 40px; height: 24px; border-radius: 999px; background: #333; position: relative; flex: none; transition: background .15s; }
+.interruptor::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #bbb; transition: transform .15s, background .15s; }
+.interruptor.on { background: var(--amarillo); }
+.interruptor.on::after { transform: translateX(16px); background: var(--sobre-amarillo); }

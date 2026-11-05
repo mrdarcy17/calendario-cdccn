@@ -9,6 +9,8 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         // Plugin propio: inicio de sesión de Google para Drive.
         registerPlugin(GoogleDrivePlugin.class);
+        // Plugin propio: huella para desbloquear (modo protegido).
+        registerPlugin(BiometriaPlugin.class);
         super.onCreate(savedInstanceState);
         // Sin efecto de "estirar/rebotar" al llegar al borde: la pantalla queda fija.
         getBridge().getWebView().setOverScrollMode(View.OVER_SCROLL_NEVER);

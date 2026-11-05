@@ -7,6 +7,8 @@ import { SesionAndroid } from './drive/auth-android';
 import { Sincronizador, memoriaLocalStorage } from './drive/sincronizador';
 import { Estado } from './estado';
 import { esNativo, plataforma } from './plataforma';
+import { huellaDisponible } from './biometria';
+import { AlmacenSeguridadNativo } from './seguridad';
 import { iniciarApp } from './ui/app';
 
 const REVISAR_DRIVE_MS = 60_000;
@@ -27,7 +29,16 @@ const sync = new Sincronizador(new DriveRest(() => sesion.token()), sesion, {
 
 estado.alCambioLocal = () => sync.cambioLocal();
 sesionWeb?.precargar();
-app = iniciarApp(document.getElementById('app')!, estado, sync);
+// Modo de acceso (solo Android): se lee antes de dibujar nada, para que el calendario no se vea si hay PIN.
+const almacenSeguridad = esNativo ? new AlmacenSeguridadNativo() : null;
+if (almacenSeguridad) {
+  const [seguridad, huella] = await Promise.all([almacenSeguridad.leer(), huellaDisponible()]);
+  estado.ui.seguridad = seguridad;
+  estado.ui.bloqueo.activo = seguridad.modo === 'protegido';
+  estado.ui.huellaDisponible = huella;
+}
+
+app = iniciarApp(document.getElementById('app')!, estado, sync, almacenSeguridad);
 
 await estado.cargar();
 if (estado.datos) {

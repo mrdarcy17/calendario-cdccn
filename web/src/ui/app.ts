@@ -5,6 +5,9 @@ import { validarDatos } from '../datos/validar';
 import type { Sincronizador } from '../drive/sincronizador';
 import { resumir, type Estado, type Vista } from '../estado';
 import { esNativo } from '../plataforma';
+import { Biometria, huellaDisponible } from '../biometria';
+import { CONFIG_INICIAL, LARGO_PIN, crearHuella, debeBloquearAlSalir, verificarPin, type AlmacenSeguridad, type ConfigSeguridad } from '../seguridad';
+import { pantallaBloqueo, pantallaCrearPin } from './bloqueo';
 import { dialogoEleccion, filaDrive, indicadorDrive } from './drive';
 import { esc } from './html';
 import { COLORES_ETIQUETA, vistaPanel } from './panel';
@@ -24,9 +27,18 @@ function ajustarAltura(t: HTMLTextAreaElement) {
   t.style.height = `${t.scrollHeight + 2}px`;
 }
 
-export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
+export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador, almacenSeguridad: AlmacenSeguridad | null = null) {
   const desplazamientos = new Map<string, { x: number; y: number }>();
   let resolverEleccion: ((r: 'drive' | 'pc' | null) => void) | null = null;
+  /** Última tecla del PIN pulsada: se ilumina un instante para saber cuál fue. */
+  let teclaPulsada: { selector: string; hasta: number } | null = null;
+  const DESTELLO_MS = 220;
+  function iluminarTecla(el: HTMLElement | null) {
+    if (!el) return;
+    el.classList.add('pulsada');
+    const restante = (teclaPulsada?.hasta ?? 0) - Date.now();
+    setTimeout(() => el.classList.remove('pulsada'), Math.max(restante, 0));
+  }
   /** Tras abrir el panel con "Agregar nota nueva", el cursor va al campo de la nota. */
   let enfocarNotaNueva = false;
 
@@ -72,6 +84,13 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
     const activo = document.activeElement as HTMLInputElement | null;
     const foco = activo?.dataset?.campo ? { campo: activo.dataset.campo, id: activo.dataset.id ?? '', inicio: activo.selectionStart } : null;
 
+    // Modo protegido: nada del calendario se dibuja hasta escribir el PIN.
+    if (e.ui.bloqueo.activo) {
+      raiz.innerHTML = pantallaBloqueo(e.ui) + (e.ui.aviso ? `<div class="aviso" role="status">${esc(e.ui.aviso)}</div>` : '');
+      if (teclaPulsada && Date.now() < teclaPulsada.hasta) iluminarTecla(raiz.querySelector(teclaPulsada.selector));
+      return;
+    }
+
     if (!e.datos) {
       raiz.innerHTML = `
         <div class="pantalla-carga">
@@ -96,7 +115,8 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
       </div>
       <div class="errores" id="errores" hidden></div>
       ${e.ui.aviso ? `<div class="aviso" role="status">${esc(e.ui.aviso)}</div>` : ''}
-      ${dialogoEleccion(e.ui)}`;
+      ${dialogoEleccion(e.ui)}
+      ${pantallaCrearPin(e.ui)}`;
 
     raiz.querySelectorAll<HTMLElement>('[data-preservar]').forEach((el) => {
       const pos = desplazamientos.get(el.dataset.preservar!);
@@ -123,6 +143,7 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
       }
     }
     pintarIndicador();
+    if (teclaPulsada && Date.now() < teclaPulsada.hasta) iluminarTecla(raiz.querySelector(teclaPulsada.selector));
     if (enfocarNotaNueva) {
       enfocarNotaNueva = false;
       const campo = raiz.querySelector<HTMLTextAreaElement>('form[data-form="nueva-nota"] textarea');
@@ -146,6 +167,81 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
   }
 
   const conError = (p: Promise<unknown>) => p.catch((err: Error) => e.avisar(err.message));
+
+  // ---------- PIN y huella (solo Android) ----------
+
+  async function guardarSeguridad(config: ConfigSeguridad) {
+    if (!almacenSeguridad) throw new Error('El PIN solo existe en la app Android.');
+    await almacenSeguridad.escribir(config);
+    ui((u) => (u.seguridad = config));
+  }
+
+  function bloquear() {
+    ui((u) => {
+      u.bloqueo = { activo: true, pin: '', error: null };
+      u.selectorMes.abierto = false;
+    });
+  }
+
+  function desbloquear() {
+    ui((u) => (u.bloqueo = { activo: false, pin: '', error: null }));
+  }
+
+  // Cuando la app abre algo del sistema (lector de huella, ventana de Google, compartir, elegir archivo),
+  // Android la "pausa" un momento. Eso no cuenta como salir: si no, se bloquearía justo al desbloquear.
+  let operacionesExternas = 0;
+  let graciaExternaHasta = 0;
+  let selectorArchivoAbierto = false;
+  const enOperacionExterna = () => operacionesExternas > 0 || selectorArchivoAbierto || Date.now() < graciaExternaHasta;
+  function externa<T>(p: Promise<T>): Promise<T> {
+    operacionesExternas++;
+    return p.finally(() => {
+      operacionesExternas--;
+      graciaExternaHasta = Date.now() + 1500;
+    });
+  }
+
+  /** Abre el lector de huella; si la huella es válida, desbloquea. */
+  function pedirHuella() {
+    if (!e.ui.bloqueo.activo || !e.ui.huellaDisponible || operacionesExternas > 0) return;
+    void externa(Biometria.autenticar()).then(desbloquear, () => {});
+  }
+
+  /** Ajuste "Abrir la huella al entrar". */
+  function huellaAutomatica() {
+    if (e.ui.seguridad.huellaAlEntrar && e.ui.bloqueo.activo) setTimeout(pedirHuella, 350);
+  }
+
+  async function digitoPin(d: string) {
+    const c = e.ui.crearPin;
+    if (c) {
+      const pin = (c.pin + d).slice(0, LARGO_PIN);
+      if (pin.length < LARGO_PIN) return ui((u) => (u.crearPin = { ...c, pin, error: null }));
+      if (c.paso === 1) return ui((u) => (u.crearPin = { ...c, paso: 2, primero: pin, pin: '', error: null }));
+      if (pin !== c.primero) {
+        return ui((u) => (u.crearPin = { ...c, paso: 1, primero: '', pin: '', error: 'Los PIN no coinciden. Vuelve a empezar.' }));
+      }
+      ui((u) => (u.crearPin = { ...c, pin }));
+      try {
+        const huellaAlEntrar = e.ui.seguridad.modo === 'protegido' && e.ui.seguridad.huellaAlEntrar;
+        await guardarSeguridad({ modo: 'protegido', pin: await crearHuella(pin), huellaAlEntrar });
+        ui((u) => (u.crearPin = null));
+        e.avisar(c.motivo === 'cambiar' ? 'PIN cambiado' : 'Modo protegido activado');
+      } catch (err) {
+        ui((u) => (u.crearPin = { ...c, paso: 1, primero: '', pin: '', error: (err as Error).message }));
+      }
+      return;
+    }
+    const b = e.ui.bloqueo;
+    if (!b.activo || b.pin.length >= LARGO_PIN) return;
+    const pin = b.pin + d;
+    ui((u) => (u.bloqueo = { ...b, pin, error: null }));
+    if (pin.length < LARGO_PIN) return;
+    const huella = e.ui.seguridad.pin;
+    // Sin límite de intentos (CU-02, 3c): si falla, se borra y se puede reintentar enseguida.
+    if (!huella || (await verificarPin(pin, huella))) desbloquear();
+    else ui((u) => (u.bloqueo = { activo: true, pin: '', error: 'PIN incorrecto' }));
+  }
 
   // ---------- Acciones ----------
 
@@ -307,15 +403,39 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
       case 'restaurar-eti':
         return datos((d) => op.restaurarEtiqueta(d, id));
       case 'exportar':
-        return void conError(exportar());
+        return void conError(externa(exportar()));
       case 'reintentar':
         return void e.guardarAhora();
       case 'recargar':
         return void e.cargar();
+      case 'pin-digito':
+        return void digitoPin(el.dataset.d!);
+      case 'pin-borrar':
+        if (e.ui.crearPin) return ui((u) => (u.crearPin = { ...u.crearPin!, pin: u.crearPin!.pin.slice(0, -1), error: null }));
+        return ui((u) => (u.bloqueo = { ...u.bloqueo, pin: u.bloqueo.pin.slice(0, -1), error: null }));
+      case 'pin-huella':
+        return pedirHuella();
+      case 'huella-al-entrar': {
+        const s = e.ui.seguridad;
+        if (s.modo !== 'protegido' || !e.ui.huellaDisponible) return;
+        return void conError(guardarSeguridad({ ...s, huellaAlEntrar: !s.huellaAlEntrar }));
+      }
+      case 'pin-cancelar':
+        return ui((u) => (u.crearPin = null));
+      case 'modo-acceso': {
+        const modo = el.dataset.modo;
+        if (modo === e.ui.seguridad.modo) return;
+        if (modo === 'protegido') return ui((u) => (u.crearPin = { motivo: 'activar', paso: 1, primero: '', pin: '', error: null }));
+        if (!confirm('¿Cambiar a modo libre? La app abrirá directo al calendario y se borrará el PIN.')) return;
+        return void conError(guardarSeguridad({ ...CONFIG_INICIAL }).then(() => e.avisar('Modo libre: PIN borrado')));
+      }
+      case 'cambiar-pin':
+        if (e.ui.seguridad.modo !== 'protegido') return;
+        return ui((u) => (u.crearPin = { motivo: 'cambiar', paso: 1, primero: '', pin: '', error: null }));
       case 'drive-conectar':
-        return void conError(sync.conectar().then(() => sync.conectado && e.avisar('Conectado con Google Drive')));
+        return void conError(externa(sync.conectar()).then(() => sync.conectado && e.avisar('Conectado con Google Drive')));
       case 'drive-reconectar':
-        return void conError(sync.reconectar());
+        return void conError(externa(sync.reconectar()));
       case 'drive-sincronizar':
         return void sync.sincronizar();
       case 'drive-desconectar':
@@ -343,6 +463,15 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
     if (presion) clearTimeout(presion.temporizador);
     presion = null;
   };
+  // Teclas del PIN: se iluminan en cuanto el dedo las toca (y siguen iluminadas tras redibujar).
+  raiz.addEventListener('pointerdown', (ev) => {
+    const tecla = (ev.target as HTMLElement).closest<HTMLElement>('.tecla[data-d], .tecla[data-accion="pin-borrar"]');
+    if (!tecla) return;
+    const selector = tecla.dataset.d ? `.tecla[data-d="${tecla.dataset.d}"]` : '.tecla[data-accion="pin-borrar"]';
+    teclaPulsada = { selector, hasta: Date.now() + DESTELLO_MS };
+    iluminarTecla(tecla);
+  });
+
   raiz.addEventListener('pointerdown', (ev) => {
     if (ev.pointerType === 'mouse') return;
     const dia = (ev.target as HTMLElement).closest<HTMLElement>('[data-menu-dia]');
@@ -373,11 +502,35 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
     if (!suprimirClic && !presion) abrirDia(dia.dataset.fecha!);
   });
 
+  // Modo protegido: salir de la app o apagar la pantalla la bloquea al instante; al volver se pide el PIN.
+  // (Bloquear al salir, y no al volver, hace que en "apps recientes" tampoco se vea el calendario.)
+  if (esNativo) {
+    raiz.addEventListener('click', (ev) => {
+      if ((ev.target as HTMLElement).closest('[data-campo="importar"], label:has([data-campo="importar"])')) selectorArchivoAbierto = true;
+    });
+    void import('@capacitor/app').then(({ App }) => {
+      App.addListener('pause', () => {
+        if (!enOperacionExterna() && debeBloquearAlSalir(e.ui.seguridad)) bloquear();
+      });
+      App.addListener('resume', () => {
+        const externo = enOperacionExterna();
+        selectorArchivoAbierto = false;
+        // Por si se registró o borró una huella mientras la app estaba en segundo plano.
+        void huellaDisponible().then((h) => {
+          if (h !== e.ui.huellaDisponible) ui((u) => (u.huellaDisponible = h));
+          if (!externo) huellaAutomatica();
+        });
+      });
+    });
+  }
+
   // Botón "atrás" de Android: cierra lo abierto, vuelve a la pantalla principal o minimiza.
   if (esNativo) {
     void import('@capacitor/app').then(({ App }) =>
       App.addListener('backButton', () => {
-        if (e.ui.eleccionDrive) {
+        if (e.ui.bloqueo.activo) void App.minimizeApp();
+        else if (e.ui.crearPin) ui((u) => (u.crearPin = null));
+        else if (e.ui.eleccionDrive) {
           ui((u) => (u.eleccionDrive = null));
           resolverEleccion?.(null);
           resolverEleccion = null;
@@ -528,5 +681,7 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
   });
 
   render();
+  // Al abrir la app ya bloqueada (arranque o reinicio del teléfono).
+  if (esNativo) huellaAutomatica();
   return { elegir };
 }
