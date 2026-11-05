@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget "Marcar día" (1×1): solo la palomita, con el color de la intensidad de hoy. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/raiz_widget_marcar"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <ImageView android:id="@+id/palomita"
+        android:layout_width="54dp" android:layout_height="54dp" android:layout_gravity="center"
+        android:background="@drawable/widget_palomita_0" android:padding="13dp"
+        android:src="@drawable/ic_palomita" android:contentDescription="@string/widget_marcar_accion" />
+</FrameLayout>

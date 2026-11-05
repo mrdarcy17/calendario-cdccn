@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget "Mapa de actividad" (2×2): solo las casillas, sin días ni meses. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/raiz_widget_mapa"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/widget_fondo" android:padding="6dp">
+    <ImageView android:id="@+id/mapa"
+        android:layout_width="match_parent" android:layout_height="match_parent"
+        android:scaleType="fitCenter" android:contentDescription="@string/widget_mapa_nombre" />
+</FrameLayout>

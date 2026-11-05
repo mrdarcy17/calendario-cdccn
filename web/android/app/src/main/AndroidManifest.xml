@@ -24,6 +24,46 @@
 
         </activity>
 
+        <!-- Bloc de notas del widget "Nota del día": ventana aparte, no aparece en recientes. -->
+        <activity
+            android:name=".NotaRapidaActivity"
+            android:label="@string/widget_nota_titulo"
+            android:theme="@style/Theme.Sarger.Nota"
+            android:taskAffinity="io.github.mrdarcy17.cdccn.nota"
+            android:excludeFromRecents="true"
+            android:windowSoftInputMode="stateVisible|adjustResize"
+            android:exported="false" />
+
+        <!-- Widgets (CU-04) -->
+        <receiver
+            android:name=".WidgetMarcar"
+            android:label="@string/widget_marcar_nombre"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_marcar_info" />
+        </receiver>
+        <receiver
+            android:name=".WidgetNota"
+            android:label="@string/widget_nota_nombre"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_nota_info" />
+        </receiver>
+
+        <receiver
+            android:name=".WidgetMapa"
+            android:label="@string/widget_mapa_nombre"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_mapa_info" />
+        </receiver>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

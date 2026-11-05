@@ -11,6 +11,8 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(GoogleDrivePlugin.class);
         // Plugin propio: huella para desbloquear (modo protegido).
         registerPlugin(BiometriaPlugin.class);
+        // Plugin propio: avisa a los widgets y detecta cambios hechos desde ellos.
+        registerPlugin(WidgetsPlugin.class);
         super.onCreate(savedInstanceState);
         // Sin efecto de "estirar/rebotar" al llegar al borde: la pantalla queda fija.
         getBridge().getWebView().setOverScrollMode(View.OVER_SCROLL_NEVER);

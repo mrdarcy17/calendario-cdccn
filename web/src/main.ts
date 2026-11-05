@@ -9,6 +9,7 @@ import { Estado } from './estado';
 import { esNativo, plataforma } from './plataforma';
 import { huellaDisponible } from './biometria';
 import { AlmacenSeguridadNativo } from './seguridad';
+import { huboCambiosDeWidgets } from './widgets';
 import { iniciarApp } from './ui/app';
 
 const REVISAR_DRIVE_MS = 60_000;
@@ -41,6 +42,19 @@ if (almacenSeguridad) {
 app = iniciarApp(document.getElementById('app')!, estado, sync, almacenSeguridad);
 
 await estado.cargar();
+
+// Widgets (Android): lo que marcaron o escribieron mientras la app estaba cerrada se sube a Drive.
+// estado.cargar() ya leyó el archivo actualizado; solo falta avisar al sincronizador.
+if (esNativo && estado.datos && (await huboCambiosDeWidgets())) sync.cambioLocal();
+if (esNativo) {
+  const { App } = await import('@capacitor/app');
+  App.addListener('resume', async () => {
+    if (!(await huboCambiosDeWidgets())) return;
+    await estado.recargar();
+    sync.cambioLocal();
+  });
+}
+
 if (estado.datos) {
   // Al abrir: sube lo pendiente o descarga lo que haya cambiado en Drive.
   void sync.sincronizar();

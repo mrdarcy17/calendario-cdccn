@@ -101,9 +101,14 @@
 ### CU-04 — Usar widgets
 - **HU:** 03 · **Actor:** Usuario · **Plataforma:** Móvil (pantalla de inicio)
 - **Widgets:**
-  - **W1 Nota del día:** abre un editor mínimo para crear una nota en el día actual (CU-09). **No pide desbloqueo.**
-  - **W2 Marcar día:** botón de palomita que sube la intensidad del día de hoy, igual que la palomita de la pantalla principal (CU-07). **No pide desbloqueo.**
-- **Postcondición:** el cambio se refleja en el calendario y se sincroniza.
+  - **W1 Marcar día (1×1):** solo la palomita, con el color de la intensidad de hoy (oscura, tenue, media o plena). Cada toque sube la intensidad 0 → 1 → 2 → 3 → 0 (CU-07) sin abrir la app. **No pide desbloqueo.**
+  - **W2 Nota del día (1×1):** solo un botón **＋** amarillo. Al tocarlo abre un **bloc de notas** (solo un campo de texto, con Cancelar y Guardar). Al guardar, el texto se agrega como **nota nueva del día de hoy** (CU-09). No muestra nada del calendario, por eso **no pide desbloqueo**. Si se sale con texto escrito, pregunta antes de descartarlo.
+  - **W3 Mapa de actividad (2×2, redimensionable):** las semanas más recientes como el mapa de la pantalla principal (las casillas llenan todo el alto; caben tantas semanas como permita el ancho), **solo las casillas** (sin días ni meses) y **fijo** (no se desliza). Mismos colores: intensidad en amarillo, eventos en verde detrás y borde en hoy. Al tocarlo abre la app (pide el PIN si está en modo protegido).
+- **Postcondición:** el cambio queda en el archivo del teléfono y los widgets "Marcar día" y "Mapa de actividad" se actualizan. Al abrir Sarger, la app lee el cambio y lo sube a Drive (CU-11).
+- **Limitación actual:** mientras no se abra la app, los cambios hechos desde los widgets no llegan a Drive ni a la web.
+- **Alternativos:**
+  - Sarger nunca se ha abierto en el teléfono → el widget pide abrirla una vez.
+  - Nota vacía → no se guarda.
 
 ### CU-05 — Ver pantalla principal (calendario)
 - **HU:** 04, 09, 10 · **Actor:** Usuario · **Plataforma:** Móvil / Web
@@ -143,7 +148,7 @@
   2. Se abre un **panel inferior deslizable** con:
      - Ícono, nombre del calendario y fecha del día (p.ej. "jue, 29 de oct de 2026").
      - Botón de **palomita** que cambia la intensidad de ese día (CU-07).
-     - Campo de texto para escribir una nota ("¿Qué fue bien? ¿Qué se interpuso?").
+     - Campo de texto para escribir una nota ("Iniciar escritura").
      - Botón de calendario para cambiar la fecha.
      - Acceso a características, notas y eventos del día.
      - Botón **Guardar**.

@@ -130,6 +130,17 @@ export class Estado {
     this.notificar();
   }
 
+  /** Un widget cambió el archivo del teléfono: se vuelve a leer (sin guardar encima). */
+  async recargar() {
+    try {
+      this.datos = await this.almacen.cargar();
+      this.notificar();
+    } catch (e) {
+      this.ui.errores = e instanceof ErrorAlmacen ? e.errores : [(e as Error).message];
+      this.notificar();
+    }
+  }
+
   /** Datos que llegan de Drive: se guardan en la copia local, pero no son un cambio local. */
   adoptarRemoto(remotos: Datos) {
     this.datos = remotos;

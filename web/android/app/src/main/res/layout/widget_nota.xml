@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget "Nota del día" (1×1): solo el botón ＋. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/raiz_widget_nota"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <ImageView
+        android:layout_width="54dp" android:layout_height="54dp" android:layout_gravity="center"
+        android:background="@drawable/widget_circulo_amarillo" android:padding="14dp"
+        android:src="@drawable/ic_mas" android:contentDescription="@string/widget_nota_titulo" />
+</FrameLayout>

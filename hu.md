@@ -20,8 +20,11 @@ Quiero que en los ajustes se pueda elegir el **modo de acceso**: **libre** (la a
 
 Quiero que tenga diferentes widgets para:
 
-- Tomar nota del día.
-- Marcar el día como realizado.
+- Tomar nota del día: abre solo un **bloc de notas** y, al guardar, el texto se agrega como nota del día de hoy.
+- Marcar el día como realizado: cada toque sube la intensidad de hoy.
+- Ver el mapa de actividad (solo las casillas, fijo).
+
+Los widgets de nota y de marcar día serán de 1×1 (solo el ＋ y solo la palomita); el del mapa, de 2×2.
 
 ## HU-04 — Programa web
 

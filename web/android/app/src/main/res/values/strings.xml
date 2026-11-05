@@ -4,4 +4,15 @@
     <string name="title_activity_main">Sarger</string>
     <string name="package_name">io.github.mrdarcy17.cdccn</string>
     <string name="custom_url_scheme">io.github.mrdarcy17.cdccn</string>
+    <string name="widget_marcar_nombre">Marcar día</string>
+    <string name="widget_marcar_descripcion">Toca para subir la intensidad de hoy</string>
+    <string name="widget_marcar_accion">Subir la intensidad de hoy</string>
+    <string name="widget_nota_nombre">Nota del día</string>
+    <string name="widget_nota_descripcion">Escribe una nota rápida para hoy</string>
+    <string name="widget_nota_titulo">Nota del día</string>
+    <string name="widget_nota_pista">Iniciar escritura</string>
+    <string name="nota_guardar">Guardar</string>
+    <string name="nota_cancelar">Cancelar</string>
+    <string name="widget_mapa_nombre">Mapa de actividad</string>
+    <string name="widget_mapa_descripcion">Tus semanas más recientes, como en la app</string>
 </resources>

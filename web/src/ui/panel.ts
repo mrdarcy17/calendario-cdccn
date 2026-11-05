@@ -107,7 +107,7 @@ function notas(e: Estado, fecha: Fecha, futura: boolean): string {
   const nueva = futura
     ? '<p class="tenue">No se pueden escribir notas en días futuros.</p>'
     : `<form data-form="nueva-nota" data-fecha="${fecha}" class="nueva-nota">
-        <textarea name="texto" rows="2" placeholder="¿Qué fue bien? ¿Qué se interpuso?" aria-label="Nueva nota"></textarea>
+        <textarea name="texto" rows="2" placeholder="Iniciar escritura" aria-label="Nueva nota"></textarea>
         <button type="submit" class="btn-chico">${icono('mas')}Agregar nota</button>
       </form>`;
   return `

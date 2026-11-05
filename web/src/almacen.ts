@@ -92,5 +92,8 @@ export class AlmacenNativo implements Almacen {
     await Filesystem.copy({ from: ruta, to: `${ruta}.bak`, directory: dir, toDirectory: dir }).catch(() => {});
     await Filesystem.writeFile({ path: `${ruta}.tmp`, directory: dir, encoding: Encoding.UTF8, data: JSON.stringify(datos, null, 2) + '\n' });
     await Filesystem.rename({ from: `${ruta}.tmp`, to: ruta, directory: dir, toDirectory: dir });
+    // El widget "Marcar día" muestra la intensidad de hoy: se redibuja con lo recién guardado.
+    const { actualizarWidgets } = await import('./widgets');
+    actualizarWidgets();
   }
 }
