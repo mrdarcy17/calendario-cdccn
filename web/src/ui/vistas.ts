@@ -1,7 +1,9 @@
 import { MESES, fechaLarga, sumarDias } from '../datos/fechas';
 import { buscar, caracteristicaEnUso, etiquetaEnUso, racha } from '../datos/operaciones';
 import type { Datos, Fecha } from '../datos/tipos';
+import type { Sincronizador } from '../drive/sincronizador';
 import type { Estado } from '../estado';
+import { filaDrive } from './drive';
 import { clases, esc } from './html';
 import { CATALOGO, icono } from './iconos';
 
@@ -10,6 +12,7 @@ function cabecera(titulo: string): string {
     <div class="cabecera-vista">
       <button class="btn-redondo" data-accion="vista" data-vista="principal" aria-label="Volver">${icono('izquierda')}</button>
       <h1>${titulo}</h1>
+      <span class="indicador indicador-drive" id="indicador-drive" hidden></span>
       <span class="indicador" id="indicador"></span>
     </div>`;
 }
@@ -28,7 +31,7 @@ function selectorIconos(objetivo: string, actual: string): string {
 
 // ---------- Ajustes ----------
 
-export function vistaAjustes(e: Estado): string {
+export function vistaAjustes(e: Estado, sync: Sincronizador): string {
   const d = e.datos;
   const activas = d.caracteristicas.filter((c) => !c.archivada);
   const archivadas = d.caracteristicas.filter((c) => c.archivada);
@@ -102,12 +105,9 @@ export function vistaAjustes(e: Estado): string {
     <section class="tarjeta grupo">
       <div class="fila">
         <span class="ico">${icono('archivo')}</span>
-        <div class="txt"><b>Archivo local</b><span>web/datos/cdccn-datos.json · se guarda solo</span></div>
+        <div class="txt"><b>Copia local</b><span>web/datos/cdccn-datos.json · se guarda sola</span></div>
       </div>
-      <div class="fila deshabilitada">
-        <span class="ico verde">${icono('nube')}</span>
-        <div class="txt"><b>Google Drive</b><span>Próximamente</span></div>
-      </div>
+      <div class="fila" id="fila-drive">${filaDrive(sync)}</div>
       <button class="fila boton-fila" data-accion="exportar">
         <span class="ico">${icono('descargar')}</span>
         <div class="txt"><b>Exportar datos</b><span>Descarga un archivo JSON</span></div>

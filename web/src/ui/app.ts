@@ -1,7 +1,10 @@
 import { deFecha, hoy } from '../datos/fechas';
 import * as op from '../datos/operaciones';
+import type { Datos } from '../datos/tipos';
 import { validarDatos } from '../datos/validar';
-import type { Estado, Vista } from '../estado';
+import type { Sincronizador } from '../drive/sincronizador';
+import { resumir, type Estado, type Vista } from '../estado';
+import { dialogoEleccion, filaDrive, indicadorDrive } from './drive';
 import { esc } from './html';
 import { COLORES_ETIQUETA, vistaPanel } from './panel';
 import { vistaPrincipal } from './principal';
@@ -20,8 +23,9 @@ function ajustarAltura(t: HTMLTextAreaElement) {
   t.style.height = `${t.scrollHeight + 2}px`;
 }
 
-export function iniciarApp(raiz: HTMLElement, e: Estado) {
+export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
   const desplazamientos = new Map<string, { x: number; y: number }>();
+  let resolverEleccion: ((r: 'drive' | 'pc' | null) => void) | null = null;
 
   // ---------- Dibujo ----------
 
@@ -40,6 +44,16 @@ export function iniciarApp(raiz: HTMLElement, e: Estado) {
       el.dataset.accion = e.ui.guardado === 'error' ? 'reintentar' : '';
       el.title = e.ui.errores.join('\n');
     });
+    const [textoDrive, claseDrive, accionDrive] = indicadorDrive(sync);
+    raiz.querySelectorAll<HTMLElement>('#indicador-drive').forEach((el) => {
+      el.textContent = textoDrive;
+      el.className = `indicador indicador-drive ${claseDrive}`;
+      el.hidden = !textoDrive;
+      el.dataset.accion = accionDrive;
+      el.title = sync.error ?? '';
+    });
+    const fila = raiz.querySelector<HTMLElement>('#fila-drive');
+    if (fila) fila.innerHTML = filaDrive(sync);
     const banda = raiz.querySelector<HTMLElement>('#errores');
     if (banda) {
       banda.hidden = !e.ui.errores.length;
@@ -69,7 +83,7 @@ export function iniciarApp(raiz: HTMLElement, e: Estado) {
     const h = hoy();
     const v = e.ui.vista;
     const contenido =
-      v === 'ajustes' ? vistaAjustes(e) : v === 'buscar' ? vistaBuscar(e) : v === 'estadisticas' ? vistaEstadisticas(e, h) : vistaPrincipal(e, h);
+      v === 'ajustes' ? vistaAjustes(e, sync) : v === 'buscar' ? vistaBuscar(e) : v === 'estadisticas' ? vistaEstadisticas(e, h) : vistaPrincipal(e, h);
     const conPanel = v === 'principal' || v === 'buscar';
 
     raiz.innerHTML = `
@@ -78,7 +92,8 @@ export function iniciarApp(raiz: HTMLElement, e: Estado) {
         ${conPanel ? `<div class="velo" data-accion="cerrar-panel"></div><aside class="panel" aria-label="Opciones del día">${vistaPanel(e, h)}</aside>` : ''}
       </div>
       <div class="errores" id="errores" hidden></div>
-      ${e.ui.aviso ? `<div class="aviso" role="status">${esc(e.ui.aviso)}</div>` : ''}`;
+      ${e.ui.aviso ? `<div class="aviso" role="status">${esc(e.ui.aviso)}</div>` : ''}
+      ${dialogoEleccion(e.ui)}`;
 
     raiz.querySelectorAll<HTMLElement>('[data-preservar]').forEach((el) => {
       const pos = desplazamientos.get(el.dataset.preservar!);
@@ -109,6 +124,17 @@ export function iniciarApp(raiz: HTMLElement, e: Estado) {
 
   e.alCambiar(render);
   document.addEventListener('cdccn:guardado', pintarIndicador);
+  sync.alCambiar(pintarIndicador);
+
+  /** Primera conexión con datos distintos: muestra el diálogo y espera la elección. */
+  function elegir(local: Datos, remoto: Datos): Promise<'drive' | 'pc' | null> {
+    return new Promise((ok) => {
+      resolverEleccion = ok;
+      ui((u) => (u.eleccionDrive = { local: resumir(local), remoto: resumir(remoto) }));
+    });
+  }
+
+  const conError = (p: Promise<unknown>) => p.catch((err: Error) => e.avisar(err.message));
 
   // ---------- Acciones ----------
 
@@ -257,6 +283,25 @@ export function iniciarApp(raiz: HTMLElement, e: Estado) {
         return void e.guardarAhora();
       case 'recargar':
         return void e.cargar();
+      case 'drive-conectar':
+        return void conError(sync.conectar().then(() => sync.conectado && e.avisar('Conectado con Google Drive')));
+      case 'drive-reconectar':
+        return void conError(sync.reconectar());
+      case 'drive-sincronizar':
+        return void sync.sincronizar();
+      case 'drive-desconectar':
+        if (confirm('¿Desconectar Google Drive? Tus datos se quedan en esta PC y el archivo sigue en tu Drive; solo se deja de sincronizar.')) sync.desconectar();
+        return;
+      case 'elegir-drive': {
+        const opcion = el.dataset.opcion;
+        const r = opcion === 'drive' ? 'drive' : opcion === 'pc' ? 'pc' : null;
+        if (r === 'drive' && !confirm('Se reemplazarán los datos de esta PC por los de Drive. ¿Continuar?')) return;
+        if (r === 'pc' && !confirm('Se reemplazarán los datos de Drive por los de esta PC. ¿Continuar?')) return;
+        ui((u) => (u.eleccionDrive = null));
+        resolverEleccion?.(r);
+        resolverEleccion = null;
+        return;
+      }
     }
   });
 
@@ -381,7 +426,11 @@ export function iniciarApp(raiz: HTMLElement, e: Estado) {
 
   document.addEventListener('keydown', (ev) => {
     if (ev.key !== 'Escape') return;
-    if (e.ui.selectorMes.abierto) ui((u) => (u.selectorMes.abierto = false));
+    if (e.ui.eleccionDrive) {
+      ui((u) => (u.eleccionDrive = null));
+      resolverEleccion?.(null);
+      resolverEleccion = null;
+    } else if (e.ui.selectorMes.abierto) ui((u) => (u.selectorMes.abierto = false));
     else if (e.ui.eligiendoIcono) ui((u) => (u.eligiendoIcono = null));
     else if (e.ui.editandoEvento) ui((u) => (u.editandoEvento = null));
     else if (e.ui.notaEtiquetando) ui((u) => (u.notaEtiquetando = null));
@@ -400,4 +449,5 @@ export function iniciarApp(raiz: HTMLElement, e: Estado) {
   });
 
   render();
+  return { elegir };
 }

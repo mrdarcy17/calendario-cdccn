@@ -66,7 +66,7 @@ Después de ingresar el PIN, quiero ver directamente el calendario como en las i
 - Un **mapa de actividad** como el gráfico de contribuciones de GitHub, que muestra **5 meses** y se puede desplazar, donde cada día se pinta según su **intensidad**.
 - Cada día tiene **3 intensidades** que yo regulo: con cada **toque en el día** del calendario sube un nivel. El primer toque lo marca como realizado con la intensidad **mínima**.
 - A la derecha de "Interacción" habrá un **ícono circular de palomita**; al apretarlo se marca el **día de hoy** de la misma forma (cada toque sube la intensidad).
-- Las casillas del calendario mensual también muestran la intensidad.
+- En el calendario mensual, la intensidad se muestra con **hasta 3 bolitas debajo del número** (1 bolita = intensidad 1, etc.).
 - Una **racha** de días seguidos con actividad.
 - Si **mantengo presionado un día**, se abren las opciones de ese día y abajo aparecen sus notas.
 - El color principal es el **amarillo** de las imágenes.

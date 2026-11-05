@@ -112,17 +112,17 @@
      3. **Racha:** chip con ícono de fuego y los días consecutivos con intensidad 1 o mayor (p.ej. "🔥 5 días").
      4. **Calendario mensual** (lun–dom) con selector de mes/año, botón **"Hoy"** y flechas de mes anterior/siguiente. El día actual se resalta con borde amarillo. Texto de ayuda: "Toca un día para marcarlo · Mantén pulsado para ver sus opciones".
      5. **Notas del día:** solo aparecen al **mantener presionado** un día (paso 6); mientras tanto la sección queda vacía.
-  2. **Intensidad de color:** en el mapa de actividad y en las casillas del calendario, cada día se pinta según la **intensidad que el usuario le asignó** (CU-07), no según las características del día:
+  2. **Intensidad:** cada día muestra la **intensidad que el usuario le asignó** (CU-07), no las características del día:
 
-     | Intensidad | Color |
-     |---|---|
-     | 0 — sin marcar | casilla oscura |
-     | 1 — mínima | amarillo tenue |
-     | 2 — media | amarillo medio |
-     | 3 — máxima | amarillo pleno |
+     | Intensidad | Mapa de actividad (color) | Calendario mensual (bolitas bajo el número) |
+     |---|---|---|
+     | 0 — sin marcar | casilla oscura | ninguna |
+     | 1 — mínima | amarillo tenue | ● |
+     | 2 — media | amarillo medio | ●● |
+     | 3 — máxima | amarillo pleno | ●●● |
 
   3. Los eventos (CU-13) pintan de verde el **fondo detrás de los días** que abarcan, como una franja continua; el cuadro de intensidad de cada día queda por encima.
-  4. Los días con notas muestran un punto debajo del número.
+  4. Los días con notas muestran un puntito gris en la esquina superior derecha del número.
   5. **Toque corto** en un día → **solo** cambia su intensidad (CU-07); no muestra notas.
   6. **Mantener presionado** un día → abre las opciones del día (CU-06) y muestra las notas de ese día en la parte inferior.
 - **Alternativos:**
@@ -196,12 +196,16 @@
 - **Flujo principal:**
   1. Cada cambio (intensidad, característica, nota, evento, ajuste) se guarda al instante en la copia local del archivo.
   2. En segundo plano, la app sube su copia local a **Google Drive**, **reemplazando el archivo completo**.
-  3. La otra plataforma descarga el archivo al abrirse y periódicamente mientras está abierta.
+  3. La otra plataforma descarga el archivo al abrirse, cada minuto mientras está abierta y al recuperar internet, siempre que no tenga cambios pendientes de subir.
+- **Primera conexión:** si Drive ya tiene datos distintos a los locales, la app pregunta cuáles conservar (los de Drive o los del dispositivo); los otros se reemplazan. Si son iguales, no pregunta.
 - **Alternativos:**
   - 2a. Sin conexión → la app funciona normal; los cambios quedan en la copia local y se sincronizan al recuperar conexión.
   - 2b. Conflicto → **gana el último archivo subido**, completo. Si se hicieron cambios en el móvil y en la web sin sincronizar entre ellos, los cambios del archivo que se subió primero **se pierden**. Riesgo aceptado por el usuario; se resolverá al migrar a base de datos.
 - **Notas:**
   - Tamaño estimado: ~3–11 MB tras 5 años de uso.
+  - La subida se agrupa: ocurre ~3 s después del último cambio.
+  - Si la sesión de Google vence (~1 h en la web), los cambios quedan pendientes y se pide "Reconectar".
+  - Permiso de Google `drive.file`: la app solo ve la carpeta y el archivo que ella misma crea.
   - El archivo vive en una carpeta de Google Drive, `cdccn/cdccn-datos.json`; la app móvil y la web local acceden con la misma cuenta de Google (inicio de sesión una sola vez en cada una).
   - Los datos se guardan **sin cifrar**; la protección es la de la cuenta de Google.
 

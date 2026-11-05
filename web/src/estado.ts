@@ -20,9 +20,23 @@ export interface UI {
   /** Característica cuyo selector de ícono está abierto, o 'calendario'. */
   eligiendoIcono: string | null;
   filtro: Filtro;
+  /** Primera conexión a Drive con datos distintos: resumen para elegir. */
+  eleccionDrive: { local: ResumenDatos; remoto: ResumenDatos } | null;
   guardado: EstadoGuardado;
   errores: string[];
   aviso: string | null;
+}
+
+export interface ResumenDatos {
+  dias: number;
+  notas: number;
+  modificado: string;
+  modificadoPor: string;
+}
+
+export function resumir(d: Datos): ResumenDatos {
+  const dias = Object.values(d.dias);
+  return { dias: dias.length, notas: dias.reduce((n, x) => n + x.notas.length, 0), modificado: d.modificado, modificadoPor: d.modificadoPor };
 }
 
 type Oyente = () => void;
@@ -33,6 +47,8 @@ export class Estado {
   datos!: Datos;
   ui: UI;
   private oyentes: Oyente[] = [];
+  /** Se llama tras cada cambio hecho por el usuario (para subirlo a Drive). */
+  alCambioLocal: (() => void) | null = null;
   private temporizador: ReturnType<typeof setTimeout> | null = null;
   private guardando: Promise<void> | null = null;
   private temporizadorAviso: ReturnType<typeof setTimeout> | null = null;
@@ -48,6 +64,7 @@ export class Estado {
       editandoEvento: null,
       eligiendoIcono: null,
       filtro: {},
+      eleccionDrive: null,
       guardado: 'cargando',
       errores: [],
       aviso: null,
@@ -85,6 +102,7 @@ export class Estado {
     fn(this.datos);
     marcarModificado(this.datos, 'web');
     this.programarGuardado();
+    this.alCambioLocal?.();
     if (render) this.notificar();
   }
 
@@ -92,6 +110,14 @@ export class Estado {
   reemplazarDatos(nuevos: Datos) {
     this.datos = nuevos;
     marcarModificado(this.datos, 'web');
+    this.programarGuardado();
+    this.alCambioLocal?.();
+    this.notificar();
+  }
+
+  /** Datos que llegan de Drive: se guardan en la copia local, pero no son un cambio local. */
+  adoptarRemoto(remotos: Datos) {
+    this.datos = remotos;
     this.programarGuardado();
     this.notificar();
   }

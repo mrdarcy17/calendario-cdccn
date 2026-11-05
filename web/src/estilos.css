@@ -18,6 +18,7 @@
   --i1: #5a4d16;
   --i2: #9f8315;
   --i3: #facc15;
+  --dia-marcado: #3d3519; /* fondo de un día marcado en el calendario (un poco más claro que la referencia) */
 
   /* Eventos: verde esmeralda */
   --verde: #34d399;
@@ -248,23 +249,22 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.8); }
 .dia { position: relative; height: 40px; display: flex; justify-content: center; padding-top: 3px; }
 .dia .num {
   position: relative; z-index: 1;
-  width: 34px; height: 30px; border-radius: 9px;
-  display: grid; place-items: center;
-  font-family: var(--mono); font-size: 14px; color: #d6d6d6;
-  transition: background .12s;
+  width: 34px; height: 32px; border-radius: 9px;
+  display: grid; justify-items: center; align-content: start; padding-top: 4px;
+  font-family: var(--mono); font-size: 14px; line-height: 16px; color: #d6d6d6;
 }
 .dia:hover:not(.futuro) .num { box-shadow: inset 0 0 0 1px #555; }
-.dia.i1 .num { background: var(--i1); color: #fff; }
-.dia.i2 .num { background: var(--i2); color: #fff; }
-.dia.i3 .num { background: var(--i3); color: var(--sobre-amarillo); font-weight: 600; }
+/* Intensidad: hasta 3 bolitas debajo del número (el mapa de actividad sí usa color). */
+.dia .bolitas { position: absolute; bottom: 4px; left: 0; right: 0; display: flex; justify-content: center; gap: 3px; }
+.dia .bolitas i { width: 5px; height: 5px; border-radius: 50%; background: var(--amarillo); }
+.dia:not(.i0):not(.futuro) .num { background: var(--dia-marcado); color: #fff; }
 .dia.otro-mes .num { color: #6a6a6a; }
-.dia.otro-mes.i1 .num, .dia.otro-mes.i2 .num { color: #cfcfcf; }
+.dia.otro-mes .bolitas i { opacity: .6; }
 .dia.futuro { cursor: default; }
 .dia.futuro .num { color: var(--muy-tenue); }
 .dia.hoy .num { box-shadow: 0 0 0 2px var(--amarillo) !important; }
 .dia.abierto .num { box-shadow: 0 0 0 2px #fff !important; }
-.dia .punto { position: absolute; bottom: 3px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--amarillo); }
-.dia.i3 .punto { background: var(--sobre-amarillo); }
+.dia .con-notas { position: absolute; top: 3px; right: 3px; width: 5px; height: 5px; border-radius: 50%; background: #9a9a9a; }
 /* Franja de evento detrás del número */
 .dia .franja { position: absolute; left: 0; right: 0; top: 2px; height: 32px; z-index: 0; }
 .dia .franja.izq { left: 2px; border-top-left-radius: 11px; border-bottom-left-radius: 11px; }
@@ -434,3 +434,37 @@ mark { background: #5a4d16; color: #fff; border-radius: 3px; padding: 0 2px; }
 .pantalla-carga { min-height: calc(100vh / var(--escala)); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; color: var(--tenue); text-align: center; }
 .pantalla-carga b { color: var(--texto); font-size: 16px; }
 .pantalla-carga .btn-principal { flex: none; margin-top: 10px; }
+
+/* ---------- Google Drive ---------- */
+.indicador-drive.ok::before { content: "✓ "; color: var(--verde); }
+.indicador-drive.aviso { color: var(--amarillo); cursor: pointer; text-decoration: underline; }
+.indicador-drive.error { color: var(--peligro); cursor: pointer; text-decoration: underline; }
+.indicador-drive[hidden] { display: none; }
+#fila-drive { flex-wrap: wrap; }
+#fila-drive .botones-fila { width: 100%; padding-left: 44px; }
+#fila-drive .botones-fila:empty { display: none; }
+#fila-drive .ruta { display: block; font-family: var(--mono); font-size: 11px; color: var(--muy-tenue); margin-top: 2px; }
+.botones-fila { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.velo-dialogo { position: fixed; inset: 0; background: rgba(0, 0, 0, .7); z-index: 40; zoom: var(--escala); }
+.dialogo {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 41;
+  width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto;
+  background: #1b1b1b; border: 1px solid #333; border-radius: 24px; padding: 22px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+@media (min-width: 1200px) and (min-height: 700px) {
+  .dialogo { width: min(520px, calc(100vw / 1.3 - 32px)); max-height: calc(100vh / 1.3 - 32px); zoom: var(--escala); }
+}
+.dialogo h2 { margin: 0; font-size: 19px; }
+.dialogo p { margin: 0; color: #cfcfcf; line-height: 1.5; }
+.dialogo > .btn-texto { align-self: center; }
+.opciones-eleccion { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) { .opciones-eleccion { grid-template-columns: 1fr; } }
+.opcion-eleccion {
+  display: flex; flex-direction: column; gap: 6px; align-items: flex-start; text-align: left;
+  padding: 14px; border-radius: 18px; background: var(--tarjeta-2); border: 1px solid var(--linea);
+}
+.opcion-eleccion:hover { border-color: var(--amarillo); }
+.opcion-eleccion .ico { width: 34px; height: 34px; border-radius: 10px; background: var(--amarillo-fondo); color: var(--amarillo); display: grid; place-items: center; }
+.opcion-eleccion span { font-size: 12.5px; }

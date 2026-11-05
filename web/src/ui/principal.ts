@@ -11,6 +11,7 @@ export function botonesSuperiores(): string {
   return `
     <div class="fila-superior">
       <span class="indicador" id="indicador"></span>
+      <span class="indicador indicador-drive" id="indicador-drive" hidden></span>
       <div class="botones-redondos">
         <button class="btn-redondo" data-accion="vista" data-vista="estadisticas" title="Estadísticas" aria-label="Estadísticas">${icono('estadisticas')}</button>
         <button class="btn-redondo" data-accion="vista" data-vista="buscar" title="Buscar" aria-label="Buscar">${icono('buscar')}</button>
@@ -124,12 +125,13 @@ function calendarioMensual(e: Estado, hoy: Fecha): string {
       franja = `<span class="${clases('franja', `ev${Math.min(nEv, 3)}`, !antes && 'izq', !despues && 'der')}"></span>`;
     }
     const conNotas = dia.notas.some((n) => n.texto.trim());
+    const bolitas = !futura && dia.intensidad > 0 ? `<span class="bolitas" aria-label="Intensidad ${dia.intensidad}">${'<i></i>'.repeat(dia.intensidad)}</span>` : '';
     const nombres = eventosEn(datos, f).map((ev) => ev.nombre).join(', ');
     dias += `
-      <button class="${clases('dia', deFecha(f).getMonth() !== mes && 'otro-mes', futura ? 'futuro' : dia.intensidad > 0 && `i${dia.intensidad}`, f === hoy && 'hoy', f === e.ui.diaAbierto && 'abierto')}"
+      <button class="${clases('dia', deFecha(f).getMonth() !== mes && 'otro-mes', futura ? 'futuro' : `i${dia.intensidad}`, f === hoy && 'hoy', f === e.ui.diaAbierto && 'abierto')}"
         data-accion="ciclar" data-menu-dia data-fecha="${f}"
         title="${f}${nombres ? ' · ' + esc(nombres) : ''}${futura ? ' · futuro' : ''}">
-        ${franja}<span class="num">${deFecha(f).getDate()}${conNotas ? '<span class="punto"></span>' : ''}</span>
+        ${franja}<span class="num">${deFecha(f).getDate()}${conNotas ? '<span class="con-notas" title="Tiene notas"></span>' : ''}${bolitas}</span>
       </button>`;
   }
   const d = deFecha(primero);

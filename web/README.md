@@ -62,14 +62,25 @@ web/
 │   │   ├── validar.ts         ← esquema JSON + reglas
 │   │   ├── fechas.ts, ids.ts
 │   │   └── __tests__/
-│   ├── almacen.ts             ← dónde se guarda (hoy: archivo local; después: Google Drive)
+│   ├── almacen.ts             ← copia local (archivo en la PC)
+│   ├── drive/                 ← Google Drive: sesión (auth.ts), API REST (api.ts) y sincronizador
 │   ├── estado.ts              ← estado de la app y autoguardado
 │   ├── ui/                    ← pantallas (principal, panel del día, ajustes, buscar, estadísticas)
 │   └── estilos.css
 └── datos/                     ← tus datos (no se suben a git)
 ```
 
+## Google Drive
+
+En **Ajustes → Datos → Google Drive → Conectar** inicia sesión con tu cuenta de Google (la que agregaste como usuario de prueba). A partir de ahí:
+
+- Cada cambio se guarda al instante en la copia local y ~3 s después se sube a **Mi unidad › cdccn › cdccn-datos.json** (el archivo completo; gana el último que sube).
+- Al abrir la web, cada minuto y al volver internet, se descarga la versión de Drive si cambió y no hay cambios pendientes.
+- Si es la primera conexión y Drive ya tiene datos distintos, te pregunta cuáles conservar.
+- Arriba verás el estado: **✓ Drive**, *pendiente*, *sin internet* o **reconectar** (la sesión de Google en la web dura ~1 hora; un clic la renueva).
+
+El ID de cliente de Google está en `web/.env` (no es secreto). El permiso es `drive.file`: la app solo ve los archivos que ella crea, no el resto de tu Drive.
+
 ## Pendiente
 
-- Sincronización con Google Drive (CU-11): se implementará como otro `Almacen`, sin cambiar la interfaz.
 - Gráficas de estadísticas (CU-12): por ahora solo hay cifras (racha actual, racha más larga, días del mes, notas).
