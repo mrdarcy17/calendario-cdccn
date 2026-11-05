@@ -16,5 +16,5 @@
     "noEmit": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["src", "servidor", "vite.config.ts"]
+  "include": ["src", "servidor", "vite.config.ts", "capacitor.config.ts"]
 }

@@ -2,6 +2,7 @@ import type { Sincronizador } from '../drive/sincronizador.ts';
 import type { ResumenDatos, UI } from '../estado.ts';
 import { esc } from './html.ts';
 import { icono } from './iconos.ts';
+import { esNativo } from '../plataforma.ts';
 
 export function haceCuanto(iso: string | null): string {
   if (!iso) return 'nunca';
@@ -44,7 +45,7 @@ export function filaDrive(s: Sincronizador): string {
   let botones = '';
   switch (s.estado) {
     case 'apagado':
-      detalle = 'Sin conectar · tus datos solo están en esta PC';
+      detalle = `Sin conectar · tus datos solo están en ${esNativo ? 'este teléfono' : 'esta PC'}`;
       botones = boton('drive-conectar', 'Conectar', true);
       break;
     case 'conectando':
@@ -93,10 +94,10 @@ export function dialogoEleccion(ui: UI): string {
     <div class="velo-dialogo"></div>
     <div class="dialogo" role="dialog" aria-modal="true" aria-labelledby="titulo-eleccion">
       <h2 id="titulo-eleccion">Ya hay datos en Google Drive</h2>
-      <p>Los datos de Drive y los de esta PC son distintos. Elige cuáles conservar; los otros se reemplazarán.</p>
+      <p>Los datos de Drive y los de ${esNativo ? 'este teléfono' : 'esta PC'} son distintos. Elige cuáles conservar; los otros se reemplazarán.</p>
       <div class="opciones-eleccion">
         ${tarjetaResumen('Usar los de Drive', e.remoto, 'drive', 'nube')}
-        ${tarjetaResumen('Usar los de esta PC', e.local, 'pc', 'archivo')}
+        ${tarjetaResumen(esNativo ? 'Usar los de este teléfono' : 'Usar los de esta PC', e.local, 'pc', 'archivo')}
       </div>
       <p class="tenue">Si no estás seguro, cancela, exporta un respaldo en Ajustes → Exportar datos y vuelve a conectar.</p>
       <button class="btn-texto" data-accion="elegir-drive" data-opcion="cancelar">Cancelar y no conectar</button>

@@ -1,9 +1,10 @@
-import { DIAS_CORTOS, MESES_CORTOS, deFecha, diaSemana, lunesDe, sumarDias } from '../datos/fechas';
+import { DIAS_CORTOS, MESES_CORTOS, deFecha, diaSemana, fechaLarga, lunesDe, sumarDias } from '../datos/fechas';
 import { eventosEn, obtenerDia, racha } from '../datos/operaciones';
 import type { Datos, Fecha } from '../datos/tipos';
 import type { Estado } from '../estado';
 import { clases, esc } from './html';
 import { icono } from './iconos';
+import { esNativo } from '../plataforma';
 
 const SEMANAS_MINIMAS = 53;
 
@@ -148,24 +149,18 @@ function calendarioMensual(e: Estado, hoy: Fecha): string {
         <button class="pastilla circulo relleno" data-accion="mes" data-delta="-1" aria-label="Mes anterior">${icono('izquierda')}</button>
         <button class="pastilla circulo" data-accion="mes" data-delta="1" aria-label="Mes siguiente">${icono('derecha')}</button>
       </div>
-      <p class="ayuda">Clic en un día para marcarlo · Clic derecho para ver sus opciones</p>
+      <p class="ayuda">${esNativo ? 'Toca un día para marcarlo · Mantén pulsado para ver sus opciones' : 'Clic en un día para marcarlo · Clic derecho para ver sus opciones'}</p>
     </section>`;
 }
 
-function notasAbajo(e: Estado): string {
-  const fecha = e.ui.diaAbierto;
-  const notas = fecha ? obtenerDia(e.datos, fecha).notas.filter((n) => n.texto.trim()) : [];
-  if (!fecha || !notas.length) {
-    return `
-      <section class="tarjeta notas-vacias solo-angosto">
-        <div class="icono-app chico">${icono('editar')}</div>
-        <div><b>Notas del día</b><span>${fecha ? 'Este día no tiene notas' : 'Clic derecho en un día para verlas'}</span></div>
-      </section>`;
-  }
+/** Botón que abre el panel del día de hoy listo para escribir una nota nueva. */
+function botonNotaNueva(hoy: Fecha): string {
   return `
-    <section class="tarjeta notas-abajo solo-angosto">
-      ${notas.map((n) => `<p>${esc(n.texto)}</p>`).join('')}
-    </section>`;
+    <button class="tarjeta boton-nota-nueva" data-accion="nota-nueva" data-fecha="${hoy}">
+      <span class="icono-app chico">${icono('editar')}</span>
+      <span class="txt"><b>Agregar nota nueva</b><span>Hoy · ${fechaLarga(hoy)}</span></span>
+      <span class="mas-redondo">${icono('mas')}</span>
+    </button>`;
 }
 
 export function vistaPrincipal(e: Estado, hoy: Fecha): string {
@@ -175,5 +170,5 @@ export function vistaPrincipal(e: Estado, hoy: Fecha): string {
     ${mapaActividad(e.datos, hoy)}
     ${chipRacha(e.datos, hoy)}
     ${calendarioMensual(e, hoy)}
-    ${notasAbajo(e)}`;
+    ${botonNotaNueva(hoy)}`;
 }

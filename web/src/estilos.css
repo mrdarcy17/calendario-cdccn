@@ -32,8 +32,10 @@
   --sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; }
+/* Sin "rebote" ni estiramiento al llegar a los bordes (Android y navegadores). */
+html, body { overscroll-behavior: none; }
 body {
   background: var(--bg);
   color: var(--texto);
@@ -60,6 +62,12 @@ svg.ic {
 }
 .app, .aviso, .errores, .pantalla-carga { zoom: var(--escala); }
 
+/* Márgenes de las barras del sistema en Android (Capacitor inyecta --safe-area-inset-*). */
+:root {
+  --sa-arriba: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --sa-abajo: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+}
+
 /* ---------- Distribución ---------- */
 .app {
   min-height: calc(100vh / var(--escala));
@@ -67,7 +75,7 @@ svg.ic {
   grid-template-columns: minmax(0, 440px);
   justify-content: center;
   gap: 24px;
-  padding: 16px 16px 40px;
+  padding: calc(16px + var(--sa-arriba)) 16px calc(12px + var(--sa-abajo));
 }
 @media (min-width: 900px) {
   .app.con-panel { grid-template-columns: minmax(0, 440px) minmax(0, 420px); align-items: start; }
@@ -89,8 +97,8 @@ svg.ic {
 }
 @media (max-width: 899px) {
   .panel {
-    position: fixed; left: 8px; right: 8px; bottom: 8px;
-    max-height: 86vh; overflow: hidden; display: flex;
+    position: fixed; left: 8px; right: 8px; bottom: calc(8px + var(--sa-abajo));
+    max-height: calc(100vh - 24px - var(--sa-arriba) - var(--sa-abajo)); overflow: hidden; display: flex;
     transform: translateY(calc(100% + 24px)); transition: transform .22s ease, visibility .22s;
     visibility: hidden;
     z-index: 20;
@@ -246,7 +254,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.8); }
 .mes { padding: 12px 10px 8px; }
 .dias-semana, .dias { display: grid; grid-template-columns: repeat(7, 1fr); }
 .dias-semana span { text-align: center; font-family: var(--mono); font-size: 12.5px; color: #bdbdbd; padding-bottom: 6px; }
-.dia { position: relative; height: 40px; display: flex; justify-content: center; padding-top: 3px; }
+.dia { position: relative; height: 40px; display: flex; justify-content: center; padding-top: 3px; touch-action: manipulation; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
 .dia .num {
   position: relative; z-index: 1;
   width: 34px; height: 32px; border-radius: 9px;
@@ -297,11 +305,12 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.8); }
 .mes-opcion.activo { background: var(--amarillo); color: var(--sobre-amarillo); font-weight: 600; }
 .ayuda { text-align: center; color: var(--tenue); font-size: 12px; margin: 8px 0 2px; }
 
-.notas-vacias { display: flex; align-items: center; gap: 14px; padding: 14px; }
-.notas-vacias b { display: block; font-size: 15px; font-weight: 600; }
-.notas-vacias span { color: var(--tenue); font-size: 13px; }
-.notas-abajo { padding: 12px 16px; }
-.notas-abajo p { margin: 6px 0; line-height: 1.45; white-space: pre-wrap; }
+.boton-nota-nueva { display: flex; align-items: center; gap: 14px; padding: 14px; width: 100%; text-align: left; }
+.boton-nota-nueva:hover { border-color: #3a3a3a; }
+.boton-nota-nueva .txt { flex: 1; min-width: 0; }
+.boton-nota-nueva b { display: block; font-size: 15px; font-weight: 600; }
+.boton-nota-nueva .txt > span { color: var(--tenue); font-size: 13px; font-family: var(--mono); }
+.mas-redondo { width: 40px; height: 40px; border-radius: 50%; background: var(--amarillo-fondo); color: var(--amarillo); display: grid; place-items: center; flex: none; }
 
 /* ---------- Panel de opciones del día ---------- */
 .panel-contenido { padding: 10px 18px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
@@ -420,13 +429,13 @@ mark { background: #5a4d16; color: #fff; border-radius: 3px; padding: 0 2px; }
 
 /* ---------- Avisos ---------- */
 .aviso {
-  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+  position: fixed; left: 50%; bottom: calc(24px + var(--sa-abajo)); transform: translateX(-50%);
   background: #262626; border: 1px solid #3a3a3a; color: var(--texto);
   padding: 10px 16px; border-radius: 999px; z-index: 30; font-size: 13px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
 }
 .errores {
-  position: fixed; left: 16px; right: 16px; top: 16px; z-index: 30;
+  position: fixed; left: 16px; right: 16px; top: calc(16px + var(--sa-arriba)); z-index: 30;
   max-width: 640px; margin: 0 auto;
   background: #2a1515; border: 1px solid #5a2727; color: #fecaca;
   border-radius: 14px; padding: 10px 14px; font-size: 13px; line-height: 1.5;

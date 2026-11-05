@@ -268,3 +268,54 @@ describe('uso normal', () => {
     expect(drive.archivo).not.toBeNull();
   });
 });
+
+describe('Android: renovación del token sin molestar al usuario', () => {
+  class SesionAndroidFalsa extends SesionFalsa {
+    renovaciones = 0;
+    puedeRenovar = true;
+    async renovar() {
+      this.renovaciones++;
+      this.t = this.puedeRenovar ? `token${this.renovaciones}` : null;
+      return this.t;
+    }
+  }
+  let android: SesionAndroidFalsa;
+
+  beforeEach(async () => {
+    android = new SesionAndroidFalsa();
+    sesion = android;
+    sync = nuevo();
+    await sync.conectar();
+  });
+
+  it('al abrir la app sin token, lo renueva solo y sincroniza', async () => {
+    android.t = null; // la app se cerró: el token vivía en memoria
+    sync = nuevo();
+    expect(sync.estado).toBe('al-dia'); // no muestra "reconectar" al arrancar
+    op.ciclarIntensidad(local, HOY, HOY);
+    sync.cambioLocal();
+    await sync.sincronizar();
+    expect(android.renovaciones).toBe(1);
+    expect(sync.estado).toBe('al-dia');
+    expect(drive.datos().dias[HOY].intensidad).toBe(1);
+  });
+
+  it('si Google rechaza el token (401), pide otro y reintenta una vez', async () => {
+    let rechazos = 1;
+    const original = drive.version.bind(drive);
+    drive.version = async (id: string) => {
+      if (rechazos-- > 0) throw new ErrorDrive(401, 'token vencido');
+      return original(id);
+    };
+    await sync.sincronizar();
+    expect(android.renovaciones).toBe(1);
+    expect(sync.estado).toBe('al-dia');
+  });
+
+  it('si Google pide volver a autorizar, muestra "reconectar"', async () => {
+    android.t = null;
+    android.puedeRenovar = false;
+    await sync.sincronizar();
+    expect(sync.estado).toBe('reconectar');
+  });
+});

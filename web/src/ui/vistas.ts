@@ -4,6 +4,7 @@ import type { Datos, Fecha } from '../datos/tipos';
 import type { Sincronizador } from '../drive/sincronizador';
 import type { Estado } from '../estado';
 import { filaDrive } from './drive';
+import { esNativo } from '../plataforma';
 import { clases, esc } from './html';
 import { CATALOGO, icono } from './iconos';
 
@@ -105,12 +106,12 @@ export function vistaAjustes(e: Estado, sync: Sincronizador): string {
     <section class="tarjeta grupo">
       <div class="fila">
         <span class="ico">${icono('archivo')}</span>
-        <div class="txt"><b>Copia local</b><span>web/datos/cdccn-datos.json · se guarda sola</span></div>
+        <div class="txt"><b>Copia local</b><span>${esNativo ? 'En el teléfono (archivos privados de la app)' : 'web/datos/cdccn-datos.json'} · se guarda sola</span></div>
       </div>
       <div class="fila" id="fila-drive">${filaDrive(sync)}</div>
       <button class="fila boton-fila" data-accion="exportar">
         <span class="ico">${icono('descargar')}</span>
-        <div class="txt"><b>Exportar datos</b><span>Descarga un archivo JSON</span></div>
+        <div class="txt"><b>Exportar datos</b><span>${esNativo ? 'Comparte un archivo JSON (Drive, correo, archivos…)' : 'Descarga un archivo JSON'}</span></div>
       </button>
       <label class="fila boton-fila">
         <span class="ico">${icono('subir')}</span>
@@ -118,7 +119,7 @@ export function vistaAjustes(e: Estado, sync: Sincronizador): string {
         <input type="file" accept="application/json,.json" data-campo="importar" hidden>
       </label>
     </section>
-    <p class="nota-pie-vista">El PIN y el modo de acceso solo existen en la app Android.</p>`;
+    <p class="nota-pie-vista">${esNativo ? 'PIN, huella y modo de acceso: próximamente.' : 'El PIN y el modo de acceso solo existen en la app Android.'}</p>`;
 }
 
 // ---------- Buscar ----------

@@ -42,3 +42,55 @@ export class AlmacenArchivoLocal implements Almacen {
     if (!res.ok) throw new ErrorAlmacen(await errores(res));
   }
 }
+
+/** Copia local en el teléfono: archivo privado de la app (solo ella puede leerlo). */
+export class AlmacenNativo implements Almacen {
+  private static ARCHIVO = 'cdccn-datos.json';
+
+  async cargar(): Promise<Datos> {
+    const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
+    const { datosIniciales } = await import('./datos/operaciones');
+    const { validarDatos } = await import('./datos/validar');
+    const { hoy } = await import('./datos/fechas');
+    // Solo si el archivo NO existe se crean datos iniciales; cualquier otro error se muestra
+    // (nunca se sobrescriben datos que no se pudieron leer).
+    const existe = await Filesystem.stat({ path: AlmacenNativo.ARCHIVO, directory: Directory.Data }).then(
+      () => true,
+      () => false,
+    );
+    if (!existe) {
+      const iniciales = datosIniciales(new Date(), 'android');
+      await this.guardar(iniciales);
+      return iniciales;
+    }
+    let texto: string;
+    try {
+      texto = (await Filesystem.readFile({ path: AlmacenNativo.ARCHIVO, directory: Directory.Data, encoding: Encoding.UTF8 })).data as string;
+    } catch (e) {
+      throw new ErrorAlmacen([`No se pudo leer el archivo de datos del teléfono: ${(e as Error).message}`]);
+    }
+    let valor: unknown;
+    try {
+      valor = JSON.parse(texto);
+    } catch {
+      throw new ErrorAlmacen(['El archivo de datos del teléfono no es un JSON válido. Hay un respaldo (.bak) en los datos de la app.']);
+    }
+    const r = validarDatos(valor, hoy());
+    if (!r.ok) throw new ErrorAlmacen(['El archivo de datos del teléfono tiene errores:', ...r.errores]);
+    return r.datos;
+  }
+
+  async guardar(datos: Datos): Promise<void> {
+    const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
+    const { validarDatos } = await import('./datos/validar');
+    const { hoy } = await import('./datos/fechas');
+    const r = validarDatos(datos, hoy());
+    if (!r.ok) throw new ErrorAlmacen(r.errores);
+    const ruta = AlmacenNativo.ARCHIVO;
+    const dir = Directory.Data;
+    // Respaldo de la versión anterior y escritura en dos pasos, como en la PC.
+    await Filesystem.copy({ from: ruta, to: `${ruta}.bak`, directory: dir, toDirectory: dir }).catch(() => {});
+    await Filesystem.writeFile({ path: `${ruta}.tmp`, directory: dir, encoding: Encoding.UTF8, data: JSON.stringify(datos, null, 2) + '\n' });
+    await Filesystem.rename({ from: `${ruta}.tmp`, to: ruta, directory: dir, toDirectory: dir });
+  }
+}

@@ -4,6 +4,7 @@ import type { Datos } from '../datos/tipos';
 import { validarDatos } from '../datos/validar';
 import type { Sincronizador } from '../drive/sincronizador';
 import { resumir, type Estado, type Vista } from '../estado';
+import { esNativo } from '../plataforma';
 import { dialogoEleccion, filaDrive, indicadorDrive } from './drive';
 import { esc } from './html';
 import { COLORES_ETIQUETA, vistaPanel } from './panel';
@@ -26,6 +27,8 @@ function ajustarAltura(t: HTMLTextAreaElement) {
 export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
   const desplazamientos = new Map<string, { x: number; y: number }>();
   let resolverEleccion: ((r: 'drive' | 'pc' | null) => void) | null = null;
+  /** Tras abrir el panel con "Agregar nota nueva", el cursor va al campo de la nota. */
+  let enfocarNotaNueva = false;
 
   // ---------- Dibujo ----------
 
@@ -120,6 +123,14 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
       }
     }
     pintarIndicador();
+    if (enfocarNotaNueva) {
+      enfocarNotaNueva = false;
+      const campo = raiz.querySelector<HTMLTextAreaElement>('form[data-form="nueva-nota"] textarea');
+      if (campo) {
+        campo.focus({ preventScroll: true });
+        setTimeout(() => campo.scrollIntoView({ block: 'center', behavior: 'smooth' }), 250);
+      }
+    }
   }
 
   e.alCambiar(render);
@@ -151,12 +162,21 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
     });
   }
 
-  function exportar() {
+  async function exportar() {
     const contenido = JSON.stringify(op.paraGuardar(e.datos), null, 2) + '\n';
+    const nombre = `cdccn-respaldo-${hoy()}.json`;
+    if (esNativo) {
+      // En el teléfono: se guarda en la caché de la app y se abre el menú de compartir (Drive, correo, archivos…).
+      const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
+      const { Share } = await import('@capacitor/share');
+      const { uri } = await Filesystem.writeFile({ path: nombre, directory: Directory.Cache, encoding: Encoding.UTF8, data: contenido });
+      await Share.share({ title: 'Respaldo de cdccn', files: [uri] }).catch(() => {});
+      return;
+    }
     const url = URL.createObjectURL(new Blob([contenido], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `cdccn-respaldo-${hoy()}.json`;
+    a.download = nombre;
     a.click();
     URL.revokeObjectURL(url);
     e.avisar('Respaldo exportado');
@@ -181,6 +201,12 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
   }
 
   raiz.addEventListener('click', (ev) => {
+    // El clic que sigue a un "mantener presionado" no debe además cambiar la intensidad.
+    if (suprimirClic) {
+      suprimirClic = false;
+      ev.preventDefault();
+      return;
+    }
     const objetivo = ev.target as HTMLElement;
     // Cierra el selector de mes al hacer clic fuera de él.
     if (e.ui.selectorMes.abierto && !objetivo.closest('.ancla-selector')) ui((u) => (u.selectorMes.abierto = false));
@@ -198,7 +224,7 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
           u.selectorMes.abierto = false;
         });
       case 'ciclar':
-        if (fecha > h) return e.avisar('Los días futuros no se pueden marcar');
+        if (fecha > h) return; // los días futuros no se marcan (sin aviso)
         return datos((d) => op.ciclarIntensidad(d, fecha, h));
       case 'ir-mes':
         return ui((u) => (u.mesVisible = primeroDelMes(fecha)));
@@ -219,6 +245,9 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
       case 'mes':
         return ui((u) => (u.mesVisible = moverMes(u.mesVisible, Number(el.dataset.delta))));
       case 'abrir-dia':
+        return abrirDia(fecha);
+      case 'nota-nueva':
+        enfocarNotaNueva = true;
         return abrirDia(fecha);
       case 'cerrar-panel':
         return ui((u) => {
@@ -278,7 +307,7 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
       case 'restaurar-eti':
         return datos((d) => op.restaurarEtiqueta(d, id));
       case 'exportar':
-        return exportar();
+        return void conError(exportar());
       case 'reintentar':
         return void e.guardarAhora();
       case 'recargar':
@@ -290,13 +319,14 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
       case 'drive-sincronizar':
         return void sync.sincronizar();
       case 'drive-desconectar':
-        if (confirm('¿Desconectar Google Drive? Tus datos se quedan en esta PC y el archivo sigue en tu Drive; solo se deja de sincronizar.')) sync.desconectar();
+        if (confirm(`¿Desconectar Google Drive? Tus datos se quedan en ${esNativo ? 'este teléfono' : 'esta PC'} y el archivo sigue en tu Drive; solo se deja de sincronizar.`)) sync.desconectar();
         return;
       case 'elegir-drive': {
         const opcion = el.dataset.opcion;
         const r = opcion === 'drive' ? 'drive' : opcion === 'pc' ? 'pc' : null;
-        if (r === 'drive' && !confirm('Se reemplazarán los datos de esta PC por los de Drive. ¿Continuar?')) return;
-        if (r === 'pc' && !confirm('Se reemplazarán los datos de Drive por los de esta PC. ¿Continuar?')) return;
+        const aqui = esNativo ? 'este teléfono' : 'esta PC';
+        if (r === 'drive' && !confirm(`Se reemplazarán los datos de ${aqui} por los de Drive. ¿Continuar?`)) return;
+        if (r === 'pc' && !confirm(`Se reemplazarán los datos de Drive por los de ${aqui}. ¿Continuar?`)) return;
         ui((u) => (u.eleccionDrive = null));
         resolverEleccion?.(r);
         resolverEleccion = null;
@@ -305,13 +335,62 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador) {
     }
   });
 
-  // Clic derecho en un día: abre sus opciones (equivale a "mantener presionado" en el móvil).
+  // Mantener presionado un día (táctil) o clic derecho (ratón): abre sus opciones.
+  const MANTENER_MS = 500;
+  let suprimirClic = false;
+  let presion: { id: number; x: number; y: number; temporizador: ReturnType<typeof setTimeout> } | null = null;
+  const cancelarPresion = () => {
+    if (presion) clearTimeout(presion.temporizador);
+    presion = null;
+  };
+  raiz.addEventListener('pointerdown', (ev) => {
+    if (ev.pointerType === 'mouse') return;
+    const dia = (ev.target as HTMLElement).closest<HTMLElement>('[data-menu-dia]');
+    if (!dia) return;
+    cancelarPresion();
+    presion = {
+      id: ev.pointerId,
+      x: ev.clientX,
+      y: ev.clientY,
+      temporizador: setTimeout(() => {
+        presion = null;
+        suprimirClic = true;
+        setTimeout(() => (suprimirClic = false), 800);
+        navigator.vibrate?.(15);
+        abrirDia(dia.dataset.fecha!);
+      }, MANTENER_MS),
+    };
+  });
+  raiz.addEventListener('pointermove', (ev) => {
+    if (presion && ev.pointerId === presion.id && Math.hypot(ev.clientX - presion.x, ev.clientY - presion.y) > 10) cancelarPresion();
+  });
+  ['pointerup', 'pointercancel'].forEach((tipo) => raiz.addEventListener(tipo, cancelarPresion));
   raiz.addEventListener('contextmenu', (ev) => {
     const dia = (ev.target as HTMLElement).closest<HTMLElement>('[data-menu-dia]');
     if (!dia) return;
     ev.preventDefault();
-    abrirDia(dia.dataset.fecha!);
+    // En pantallas táctiles el menú contextual llega con la presión larga, que ya abrió el día.
+    if (!suprimirClic && !presion) abrirDia(dia.dataset.fecha!);
   });
+
+  // Botón "atrás" de Android: cierra lo abierto, vuelve a la pantalla principal o minimiza.
+  if (esNativo) {
+    void import('@capacitor/app').then(({ App }) =>
+      App.addListener('backButton', () => {
+        if (e.ui.eleccionDrive) {
+          ui((u) => (u.eleccionDrive = null));
+          resolverEleccion?.(null);
+          resolverEleccion = null;
+        } else if (e.ui.selectorMes.abierto) ui((u) => (u.selectorMes.abierto = false));
+        else if (e.ui.eligiendoIcono) ui((u) => (u.eligiendoIcono = null));
+        else if (e.ui.editandoEvento) ui((u) => (u.editandoEvento = null));
+        else if (e.ui.notaEtiquetando) ui((u) => (u.notaEtiquetando = null));
+        else if (e.ui.diaAbierto) ui((u) => (u.diaAbierto = null));
+        else if (e.ui.vista !== 'principal') ui((u) => (u.vista = 'principal'));
+        else void App.minimizeApp();
+      }),
+    );
+  }
 
   raiz.addEventListener('submit', (ev) => {
     const form = ev.target as HTMLFormElement;

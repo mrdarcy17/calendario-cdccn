@@ -28,6 +28,8 @@ export interface AlmacenMemoria {
 export interface Sesion {
   token(): string | null;
   iniciar(primeraVez: boolean): Promise<string>;
+  /** Solo Android: obtiene un token nuevo sin mostrar nada (null si hace falta volver a autorizar). */
+  renovar?(forzar?: boolean): Promise<string | null>;
   cerrar(): void;
 }
 
@@ -65,7 +67,13 @@ export class Sincronizador {
     private esperaSubidaMs = 3000,
   ) {
     this.memoria = { ...MEMORIA_VACIA, ...(almacen.leer() ?? {}) };
-    this.estado = !this.memoria.conectado ? 'apagado' : this.sesion.token() ? (this.memoria.pendiente ? 'pendiente' : 'al-dia') : 'reconectar';
+    this.estado = !this.memoria.conectado
+      ? 'apagado'
+      : this.sesion.token() || this.sesion.renovar
+        ? this.memoria.pendiente
+          ? 'pendiente'
+          : 'al-dia'
+        : 'reconectar';
   }
 
   get conectado() {
@@ -170,27 +178,42 @@ export class Sincronizador {
     this.temporizador = setTimeout(() => void this.sincronizar(), this.esperaSubidaMs);
   }
 
+  /** En Android, intenta obtener un token nuevo sin molestar al usuario. */
+  private async renovar(forzar = false): Promise<boolean> {
+    if (!this.sesion.renovar) return false;
+    try {
+      return Boolean(await this.sesion.renovar(forzar));
+    } catch {
+      return false;
+    }
+  }
+
   /** Sube lo pendiente o descarga lo nuevo. Nunca lanza errores: los refleja en el estado. */
   async sincronizar(): Promise<void> {
     if (this.enCurso) return this.enCurso;
     if (!this.memoria.conectado) return;
-    if (!this.sesion.token()) return this.poner('reconectar');
+    if (!this.sesion.token() && !this.sesion.renovar) return this.poner('reconectar');
     this.enCurso = (async () => {
+      if (!this.sesion.token() && !(await this.renovar())) return this.poner('reconectar');
       this.poner('sincronizando');
-      try {
-        if (this.memoria.pendiente) await this.subir();
-        else await this.bajar();
-        this.guardarMemoria({ ultimaSync: new Date().toISOString() });
-        this.poner(this.memoria.pendiente ? 'pendiente' : 'al-dia');
-      } catch (e) {
-        const err = e instanceof ErrorDrive ? e : new ErrorDrive(-1, (e as Error).message);
-        if (err.sesionVencida) this.poner('reconectar');
-        else if (err.sinInternet) this.poner('sin-internet');
-        else this.poner('error', err.message);
-      } finally {
-        this.enCurso = null;
+      for (let intento = 0; ; intento++) {
+        try {
+          if (this.memoria.pendiente) await this.subir();
+          else await this.bajar();
+          this.guardarMemoria({ ultimaSync: new Date().toISOString() });
+          return this.poner(this.memoria.pendiente ? 'pendiente' : 'al-dia');
+        } catch (e) {
+          const err = e instanceof ErrorDrive ? e : new ErrorDrive(-1, (e as Error).message);
+          // Token rechazado por Google: en Android se pide uno nuevo y se reintenta una vez.
+          if (err.sesionVencida && intento === 0 && (await this.renovar(true))) continue;
+          if (err.sesionVencida) return this.poner('reconectar');
+          if (err.sinInternet) return this.poner('sin-internet');
+          return this.poner('error', err.message);
+        }
       }
-    })();
+    })().finally(() => {
+      this.enCurso = null;
+    });
     await this.enCurso;
     // Si llegaron cambios durante la subida, se suben enseguida.
     if (this.memoria.pendiente && this.estado === 'pendiente') await this.sincronizar();

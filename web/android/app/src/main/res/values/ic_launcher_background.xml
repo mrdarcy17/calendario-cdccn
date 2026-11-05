@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fondo negro del ícono de Sarger -->
+    <color name="ic_launcher_background">#000000</color>
+    <!-- Fondo oscuro de la app (pantalla de inicio y mientras carga) -->
+    <color name="cdccn_fondo">#0E0E0F</color>
+</resources>

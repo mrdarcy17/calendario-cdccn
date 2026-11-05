@@ -68,7 +68,10 @@ Después de ingresar el PIN, quiero ver directamente el calendario como en las i
 - A la derecha de "Interacción" habrá un **ícono circular de palomita**; al apretarlo se marca el **día de hoy** de la misma forma (cada toque sube la intensidad).
 - En el calendario mensual, la intensidad se muestra con **hasta 3 bolitas debajo del número** (1 bolita = intensidad 1, etc.).
 - Una **racha** de días seguidos con actividad.
-- Si **mantengo presionado un día**, se abren las opciones de ese día y abajo aparecen sus notas.
+- Si **mantengo presionado un día**, se abren las opciones de ese día (con sus notas).
+- Abajo del calendario habrá un botón **"Agregar nota nueva"** que abre el panel del **día de hoy** listo para escribir.
+- Tocar un día futuro no hace nada (sin avisos).
+- La pantalla principal queda **fija**: no se desliza si todo cabe en la pantalla.
 - El color principal es el **amarillo** de las imágenes.
 
 > El chip "Todos los días" de las imágenes no se incluye.

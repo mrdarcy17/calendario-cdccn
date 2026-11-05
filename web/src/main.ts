@@ -1,16 +1,21 @@
 import './estilos.css';
-import { AlmacenArchivoLocal } from './almacen';
+import { AlmacenArchivoLocal, AlmacenNativo } from './almacen';
 import { hoy } from './datos/fechas';
 import { DriveRest } from './drive/api';
 import { SesionGoogle } from './drive/auth';
+import { SesionAndroid } from './drive/auth-android';
 import { Sincronizador, memoriaLocalStorage } from './drive/sincronizador';
 import { Estado } from './estado';
+import { esNativo, plataforma } from './plataforma';
 import { iniciarApp } from './ui/app';
 
 const REVISAR_DRIVE_MS = 60_000;
 
-const estado = new Estado(new AlmacenArchivoLocal());
-const sesion = new SesionGoogle();
+// En el teléfono la copia local vive en los archivos de la app; en la PC, en web/datos/ vía el servidor local.
+const estado = new Estado(esNativo ? new AlmacenNativo() : new AlmacenArchivoLocal(), plataforma);
+// En la web: inicio de sesión de Google en el navegador. En Android: inicio de sesión nativo.
+const sesionWeb = esNativo ? null : new SesionGoogle();
+const sesion = sesionWeb ?? new SesionAndroid();
 let app: ReturnType<typeof iniciarApp> | null = null;
 
 const sync = new Sincronizador(new DriveRest(() => sesion.token()), sesion, {
@@ -21,7 +26,7 @@ const sync = new Sincronizador(new DriveRest(() => sesion.token()), sesion, {
 }, memoriaLocalStorage);
 
 estado.alCambioLocal = () => sync.cambioLocal();
-sesion.precargar();
+sesionWeb?.precargar();
 app = iniciarApp(document.getElementById('app')!, estado, sync);
 
 await estado.cargar();

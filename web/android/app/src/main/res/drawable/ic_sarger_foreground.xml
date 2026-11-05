@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícono de Sarger: símbolo ⎎ (U+238E) en amarillo, contorno tomado de Noto Sans Symbols Bold (licencia OFL).
+     La zona segura del ícono adaptable es el círculo central de 66 dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M35.76 76V72.12Q38.41 71.19 39.58 69.28Q40.75 67.37 40.75 64.29V43.28Q40.75 38.1 43.59 35.05Q46.42 32 51.29 32H72.24V35.88Q69.59 36.81 68.42 38.72Q67.25 40.63 67.25 43.65V64.72Q67.25 69.9 64.45 72.95Q61.64 76 56.77 76ZM46.48 69.28H56.77Q58.5 69.28 59.52 68.11Q60.53 66.94 60.53 64.72V43.65Q60.53 40.57 61.52 38.84V38.72H51.29Q49.5 38.72 48.52 39.92Q47.53 41.12 47.53 43.28V64.29Q47.53 67.37 46.48 69.16Z"
+        android:fillColor="#FACC15" />
+</vector>

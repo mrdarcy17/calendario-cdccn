@@ -111,7 +111,7 @@
      2. **Mapa de actividad** estilo gráfico de contribuciones de GitHub: una cuadrícula con columnas = semanas y filas = días de la semana, con los meses rotulados arriba, que muestra **5 meses** a la vez y se puede **desplazar** hacia meses anteriores. Los eventos también se muestran aquí con el mismo verde detrás de las casillas.
      3. **Racha:** chip con ícono de fuego y los días consecutivos con intensidad 1 o mayor (p.ej. "🔥 5 días").
      4. **Calendario mensual** (lun–dom) con selector de mes/año, botón **"Hoy"** y flechas de mes anterior/siguiente. El día actual se resalta con borde amarillo. Texto de ayuda: "Toca un día para marcarlo · Mantén pulsado para ver sus opciones".
-     5. **Notas del día:** solo aparecen al **mantener presionado** un día (paso 6); mientras tanto la sección queda vacía.
+     5. **Botón "Agregar nota nueva"** (móvil y web): abre el panel del **día de hoy** (CU-06) con el cursor en el campo de nota nueva.
   2. **Intensidad:** cada día muestra la **intensidad que el usuario le asignó** (CU-07), no las características del día:
 
      | Intensidad | Mapa de actividad (color) | Calendario mensual (bolitas bajo el número) |
@@ -124,7 +124,8 @@
   3. Los eventos (CU-13) pintan de verde el **fondo detrás de los días** que abarcan, como una franja continua; el cuadro de intensidad de cada día queda por encima.
   4. Los días con notas muestran un puntito gris en la esquina superior derecha del número.
   5. **Toque corto** en un día → **solo** cambia su intensidad (CU-07); no muestra notas.
-  6. **Mantener presionado** un día → abre las opciones del día (CU-06) y muestra las notas de ese día en la parte inferior.
+  6. **Mantener presionado** un día (en web: clic derecho) → abre las opciones del día (CU-06), donde están sus notas.
+  7. La pantalla principal no se desliza ni "rebota" cuando el contenido cabe en la pantalla.
 - **Alternativos:**
   - 5a. Toque en un área del mapa de actividad → el calendario mensual cambia al **mes** correspondiente a la zona tocada (no se selecciona un día específico).
   - 3a. La racha se reinicia a 0 si ayer quedó con intensidad 0; el día de hoy sin marcar no rompe la racha hasta que termine.
@@ -154,7 +155,7 @@
   3. El primer toque sobre un día sin marcar lo deja como **realizado con intensidad mínima (1)**.
   4. La casilla del calendario, el mapa de actividad y la racha se actualizan al instante.
 - **Alternativos:**
-  - 1a. Día futuro → el toque no cambia la intensidad; los días futuros no se pueden marcar.
+  - 1a. Día futuro → el toque no hace nada (sin aviso); los días futuros no se pueden marcar.
   - 2a. La palomita del encabezado sigue el **mismo ciclo** y se pinta igual que la casilla de hoy: oscura (0), amarillo tenue (1), medio (2) o pleno (3).
 - **Postcondición:** intensidad guardada automáticamente (CU-11).
 

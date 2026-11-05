@@ -1,7 +1,7 @@
 import { ErrorAlmacen, type Almacen } from './almacen';
 import { hoy } from './datos/fechas';
 import { marcarModificado, paraGuardar, type Filtro } from './datos/operaciones';
-import type { Datos, Fecha } from './datos/tipos';
+import type { Datos, Fecha, Plataforma } from './datos/tipos';
 
 export type Vista = 'principal' | 'buscar' | 'ajustes' | 'estadisticas';
 export type EstadoGuardado = 'cargando' | 'guardado' | 'pendiente' | 'guardando' | 'error';
@@ -53,7 +53,10 @@ export class Estado {
   private guardando: Promise<void> | null = null;
   private temporizadorAviso: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private almacen: Almacen) {
+  constructor(
+    private almacen: Almacen,
+    private plataforma: Plataforma = 'web',
+  ) {
     const h = hoy();
     this.ui = {
       vista: 'principal',
@@ -100,7 +103,7 @@ export class Estado {
   /** Cambia los datos y programa el autoguardado. Con render=false no se redibuja (p.ej. mientras se escribe). */
   cambiarDatos(fn: (datos: Datos) => void, render = true) {
     fn(this.datos);
-    marcarModificado(this.datos, 'web');
+    marcarModificado(this.datos, this.plataforma);
     this.programarGuardado();
     this.alCambioLocal?.();
     if (render) this.notificar();
@@ -109,7 +112,7 @@ export class Estado {
   /** Reemplaza todos los datos (importar). */
   reemplazarDatos(nuevos: Datos) {
     this.datos = nuevos;
-    marcarModificado(this.datos, 'web');
+    marcarModificado(this.datos, this.plataforma);
     this.programarGuardado();
     this.alCambioLocal?.();
     this.notificar();
