@@ -1,0 +1,25 @@
+{
+  "name": "calendario-cdccn-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Web local de calendario-cdccn",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "datos:ejemplo": "node scripts/copiar-ejemplo.mjs"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.1.0"
+  }
+}
