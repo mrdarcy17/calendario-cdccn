@@ -102,10 +102,9 @@
 - **HU:** 03 · **Actor:** Usuario · **Plataforma:** Móvil (pantalla de inicio)
 - **Widgets:**
   - **W1 Marcar día (1×1):** solo la palomita, con el color de la intensidad de hoy (oscura, tenue, media o plena). Cada toque sube la intensidad 0 → 1 → 2 → 3 → 0 (CU-07) sin abrir la app. **No pide desbloqueo.**
-  - **W2 Nota del día (1×1):** solo un botón **＋** amarillo. Al tocarlo abre un **bloc de notas** (solo un campo de texto, con Cancelar y Guardar). Al guardar, el texto se agrega como **nota nueva del día de hoy** (CU-09). No muestra nada del calendario, por eso **no pide desbloqueo**. Si se sale con texto escrito, pregunta antes de descartarlo.
+  - **W2 Nota del día (1×1):** solo un botón **＋** amarillo. Al tocarlo abre un **bloc de notas** con un botón **Etiquetas** arriba (entre las flechas de regresar y guardar) que abre una lista simple con casillas para marcar una o varias (solo un campo de texto, con Cancelar y Guardar). Al guardar, el texto se agrega como **nota nueva del día de hoy** (CU-09). No muestra nada del calendario, por eso **no pide desbloqueo**. Si se sale con texto escrito, pregunta antes de descartarlo.
   - **W3 Mapa de actividad (2×2, redimensionable):** las semanas más recientes como el mapa de la pantalla principal (las casillas llenan todo el alto; caben tantas semanas como permita el ancho), **solo las casillas** (sin días ni meses) y **fijo** (no se desliza). Mismos colores: intensidad en amarillo, eventos en verde detrás y borde en hoy. Al tocarlo abre la app (pide el PIN si está en modo protegido).
-- **Postcondición:** el cambio queda en el archivo del teléfono y los widgets "Marcar día" y "Mapa de actividad" se actualizan. Al abrir Sarger, la app lee el cambio y lo sube a Drive (CU-11).
-- **Limitación actual:** mientras no se abra la app, los cambios hechos desde los widgets no llegan a Drive ni a la web.
+- **Postcondición:** el cambio queda en el archivo del teléfono, los widgets "Marcar día" y "Mapa de actividad" se actualizan y, si Drive está conectado, **se sube solo a Drive en segundo plano** (unos segundos después, en cuanto haya internet), sin abrir la app. Al abrir Sarger, la app recarga el cambio; si ya se subió, no lo vuelve a subir.
 - **Alternativos:**
   - Sarger nunca se ha abierto en el teléfono → el widget pide abrirla una vez.
   - Nota vacía → no se guarda.
@@ -170,7 +169,7 @@
 
 ### CU-08 — Gestionar características del día
 - **HU:** 05 · **Actor:** Usuario · **Plataforma:** Móvil / Web
-- **Descripción:** las características son una lista de cosas que pasaron en el día (p.ej. "Sacar un contacto", "Conocer a alguien nuevo", "Salir con alguien nuevo"). **No se reflejan en los calendarios**; sirven como registro y para estadísticas.
+- **Descripción:** las características son las acciones del día: **contacto**, **salida** y **escalamiento** (se pueden agregar o modificar). **No se reflejan en los calendarios**; sirven como registro y para estadísticas.
 - **Flujo principal (marcar en un día):**
   1. En las opciones del día (CU-06), el usuario abre "Características".
   2. Marca o desmarca las características que aplican a ese día.
@@ -184,7 +183,7 @@
 - **HU:** 06 · **Actor:** Usuario · **Plataforma:** Móvil / Web
 - **Flujo principal:**
   1. En el detalle del día, el usuario pulsa "Nueva nota".
-  2. Escribe el texto y asigna **una o varias** etiquetas.
+  2. Escribe el texto y pulsa **Etiquetas**: se abre un cuadro con todas las etiquetas (análisis, mejora, error, shitest, juego, idis) para marcar **una o varias**. Lo escrito no se pierde al abrir el cuadro. Lo mismo con el ícono de etiqueta de una nota existente.
   3. La nota se guarda automáticamente mientras escribe.
 - **Alternativos:**
   - 1a. Editar una nota existente.
@@ -221,14 +220,27 @@
 
 ### CU-12 — Ver estadísticas
 - **HU:** 08 · **Actor:** Usuario · **Plataforma:** Móvil / Web
-- **Estado:** 🟡 en definición (la HU indica que aún se está pensando).
-- **Flujo principal (propuesta):**
-  1. El usuario pulsa el botón **Estadísticas** de la pantalla principal y elige un periodo (semana, mes, año, personalizado).
-  2. Se muestra:
-     - Gráfica **lineal**: intensidad por día/semana a lo largo del tiempo.
-     - Gráfica de **radar**: frecuencia de cada característica en el periodo.
-     - Rachas: racha actual (también visible en la pantalla principal, CU-05) y racha más larga.
-  3. El usuario puede filtrar por característica o comparar con el periodo anterior.
+- **Flujo principal:**
+  1. El usuario pulsa el botón **Estadísticas** de la pantalla principal.
+  2. Se muestran cifras: racha actual, racha más larga, días marcados en el mes y notas en total.
+  3. Se muestra la gráfica **"Días marcados por semana"**: barras apiladas, una por semana (0 a 7 días), cada barra dividida por intensidad (nivel 1 abajo, nivel 2, nivel 3 arriba) con los mismos amarillos del calendario.
+  4. El usuario elige el periodo: **12, 26 o 52 semanas** (la última barra es la semana en curso).
+  5. Al pasar el dedo/ratón (o con el teclado) sobre una barra, se ve su detalle: rango de la semana, días y cuántos de cada nivel.
+  6. Con **"Ver tabla"** la misma información se muestra como tabla.
+  7. Debajo, la sección **Récords** (un día "marcado" es uno con intensidad ≥ 1; en empates cuenta la primera vez):
+     1. Racha más larga (con fechas).
+     2. Mejor semana (más días marcados; desempata la suma de intensidades).
+     3. Mejor mes.
+     4. Semanas seguidas activas (con al menos un día marcado) y cuántas llevas ahora.
+     5. Semanas perfectas (7 de 7).
+     6. Racha al máximo (días seguidos en nivel 3).
+     7. Mes más intenso (más días en nivel 3).
+     8. Total histórico (días marcados y días desde el primero).
+     9. Tu mejor día de la semana.
+     10. Récord semanal por característica (más veces en una misma semana).
+     11. Característica más frecuente.
+  - Un récord logrado en los últimos 7 días muestra la etiqueta **"¡Nuevo!"**.
+- **Pendiente:** puntaje (futuras actualizaciones).
 
 ### CU-13 — Gestionar eventos (subrayado de periodos)
 - **HU:** 09 · **Actor:** Usuario · **Plataforma:** Móvil / Web

@@ -1,9 +1,14 @@
 package io.github.mrdarcy17.cdccn;
 
 import android.os.Bundle;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
@@ -12,9 +17,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Bloc de notas del widget "Nota del día": solo un campo de texto. Al guardar, el texto se agrega como
@@ -23,6 +29,10 @@ import java.util.Locale;
 public class NotaRapidaActivity extends AppCompatActivity {
 
     private EditText texto;
+    /** Etiquetas disponibles { id, nombre, color } y las elegidas (ids). */
+    private List<String[]> etiquetas = new ArrayList<>();
+    private final Set<String> elegidas = new LinkedHashSet<>();
+    private TextView botonEtiquetas;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,8 +49,10 @@ public class NotaRapidaActivity extends AppCompatActivity {
         });
 
         texto = findViewById(R.id.texto_nota);
-        TextView fecha = findViewById(R.id.fecha_nota);
-        fecha.setText(new SimpleDateFormat("EEE, d 'de' MMM 'de' yyyy", new Locale("es", "MX")).format(new Date()));
+        etiquetas = DatosArchivo.etiquetasActivas(this);
+        botonEtiquetas = findViewById(R.id.boton_etiquetas);
+        botonEtiquetas.setOnClickListener(v -> elegirEtiquetas());
+        botonEtiquetas.setVisibility(etiquetas.isEmpty() ? View.INVISIBLE : View.VISIBLE);
 
         findViewById(R.id.boton_guardar).setOnClickListener(v -> guardar());
         findViewById(R.id.boton_cancelar).setOnClickListener(v -> salir());
@@ -60,7 +72,8 @@ public class NotaRapidaActivity extends AppCompatActivity {
             return;
         }
         try {
-            if (DatosArchivo.agregarNotaHoy(this, contenido)) {
+            List<String> etiquetas = new ArrayList<>(elegidas);
+            if (DatosArchivo.agregarNotaHoy(this, contenido, etiquetas)) {
                 Toast.makeText(this, "Nota agregada a hoy", Toast.LENGTH_SHORT).show();
                 WidgetMarcar.actualizarTodos(this);
                 finish();
@@ -69,6 +82,45 @@ public class NotaRapidaActivity extends AppCompatActivity {
             }
         } catch (Exception e) {
             Toast.makeText(this, "No se pudo guardar la nota", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private int dp(float v) {
+        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v, getResources().getDisplayMetrics()));
+    }
+
+    /** Cuadro chico, arriba (debajo del botón), con una casilla por etiqueta para marcar una o varias. */
+    private void elegirEtiquetas() {
+        LinearLayout lista = new LinearLayout(this);
+        lista.setOrientation(LinearLayout.VERTICAL);
+        lista.setPadding(dp(12), dp(8), dp(12), dp(8));
+        for (String[] e : etiquetas) {
+            String id = e[0];
+            CheckBox casilla = new CheckBox(this);
+            casilla.setText(e[1]);
+            casilla.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+            casilla.setTextColor(0xFFE5E5E5);
+            casilla.setMinHeight(dp(34));
+            casilla.setMinimumHeight(dp(34));
+            casilla.setPadding(dp(4), 0, 0, 0);
+            casilla.setChecked(elegidas.contains(id));
+            casilla.setOnCheckedChangeListener((v, marcada) -> {
+                if (marcada) elegidas.add(id);
+                else elegidas.remove(id);
+            });
+            lista.addView(casilla, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(34)));
+        }
+        // Sin botón: se cierra tocando fuera del cuadro o con "atrás"; lo marcado ya queda guardado.
+        AlertDialog cuadro = new AlertDialog.Builder(this).setView(lista).create();
+        cuadro.setCanceledOnTouchOutside(true);
+        cuadro.show();
+        Window ventana = cuadro.getWindow();
+        if (ventana != null) {
+            WindowManager.LayoutParams lp = ventana.getAttributes();
+            lp.gravity = Gravity.TOP;
+            lp.y = dp(56); // justo debajo de la barra con las flechas
+            lp.width = dp(220);
+            ventana.setAttributes(lp);
         }
     }
 

@@ -7,10 +7,10 @@ import { resumir, type Estado, type Vista } from '../estado';
 import { esNativo } from '../plataforma';
 import { Biometria, huellaDisponible } from '../biometria';
 import { CONFIG_INICIAL, LARGO_PIN, crearHuella, debeBloquearAlSalir, verificarPin, type AlmacenSeguridad, type ConfigSeguridad } from '../seguridad';
-import { pantallaBloqueo, pantallaCrearPin } from './bloqueo';
+import { pantallaBloqueo, pantallaCrearPin, textosCrearPin } from './bloqueo';
 import { dialogoEleccion, filaDrive, indicadorDrive } from './drive';
 import { esc } from './html';
-import { COLORES_ETIQUETA, vistaPanel } from './panel';
+import { COLORES_ETIQUETA, dialogoEtiquetas, vistaPanel } from './panel';
 import { vistaPrincipal } from './principal';
 import { resultadosBusqueda, vistaAjustes, vistaBuscar, vistaEstadisticas } from './vistas';
 
@@ -30,15 +30,8 @@ function ajustarAltura(t: HTMLTextAreaElement) {
 export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador, almacenSeguridad: AlmacenSeguridad | null = null) {
   const desplazamientos = new Map<string, { x: number; y: number }>();
   let resolverEleccion: ((r: 'drive' | 'pc' | null) => void) | null = null;
-  /** Última tecla del PIN pulsada: se ilumina un instante para saber cuál fue. */
-  let teclaPulsada: { selector: string; hasta: number } | null = null;
-  const DESTELLO_MS = 220;
-  function iluminarTecla(el: HTMLElement | null) {
-    if (!el) return;
-    el.classList.add('pulsada');
-    const restante = (teclaPulsada?.hasta ?? 0) - Date.now();
-    setTimeout(() => el.classList.remove('pulsada'), Math.max(restante, 0));
-  }
+  /** Teclas del PIN: se iluminan al tocarlas y se desvanecen al soltar (visibles al menos un instante). */
+  const DESTELLO_MIN_MS = 140;
   /** Tras abrir el panel con "Agregar nota nueva", el cursor va al campo de la nota. */
   let enfocarNotaNueva = false;
 
@@ -87,7 +80,6 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador, al
     // Modo protegido: nada del calendario se dibuja hasta escribir el PIN.
     if (e.ui.bloqueo.activo) {
       raiz.innerHTML = pantallaBloqueo(e.ui) + (e.ui.aviso ? `<div class="aviso" role="status">${esc(e.ui.aviso)}</div>` : '');
-      if (teclaPulsada && Date.now() < teclaPulsada.hasta) iluminarTecla(raiz.querySelector(teclaPulsada.selector));
       return;
     }
 
@@ -116,6 +108,7 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador, al
       <div class="errores" id="errores" hidden></div>
       ${e.ui.aviso ? `<div class="aviso" role="status">${esc(e.ui.aviso)}</div>` : ''}
       ${dialogoEleccion(e.ui)}
+      ${dialogoEtiquetas(e)}
       ${pantallaCrearPin(e.ui)}`;
 
     raiz.querySelectorAll<HTMLElement>('[data-preservar]').forEach((el) => {
@@ -143,7 +136,6 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador, al
       }
     }
     pintarIndicador();
-    if (teclaPulsada && Date.now() < teclaPulsada.hasta) iluminarTecla(raiz.querySelector(teclaPulsada.selector));
     if (enfocarNotaNueva) {
       enfocarNotaNueva = false;
       const campo = raiz.querySelector<HTMLTextAreaElement>('form[data-form="nueva-nota"] textarea');
@@ -212,35 +204,64 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador, al
     if (e.ui.seguridad.huellaAlEntrar && e.ui.bloqueo.activo) setTimeout(pedirHuella, 350);
   }
 
+  /**
+   * Cambios mientras se escribe el PIN: se actualizan solo los puntos y los textos, sin redibujar la
+   * pantalla, para que las teclas no se reemplacen y su animación no se corte.
+   */
+  function cambiarPin(fn: (u: Estado['ui']) => void) {
+    e.cambiarUI(fn, false);
+    const pantalla = raiz.querySelector<HTMLElement>('.pantalla-pin');
+    const c = e.ui.crearPin;
+    const b = e.ui.bloqueo;
+    if (!pantalla || (!c && !b.activo)) return render();
+    const largo = c ? c.pin.length : b.pin.length;
+    const error = c ? c.error : b.error;
+    const puntos = pantalla.querySelector<HTMLElement>('.puntos-pin')!;
+    puntos.querySelectorAll('i').forEach((i, k) => i.classList.toggle('lleno', k < largo));
+    puntos.classList.remove('error');
+    if (error) {
+      void puntos.offsetWidth; // reinicia la sacudida
+      puntos.classList.add('error');
+    }
+    pantalla.querySelector('.error-pin')!.textContent = error ?? '';
+    if (c) {
+      const t = textosCrearPin(c);
+      pantalla.querySelector('h1')!.textContent = t.titulo;
+      pantalla.querySelector('h1 + p')!.textContent = t.ayuda;
+    }
+  }
+
   async function digitoPin(d: string) {
     const c = e.ui.crearPin;
     if (c) {
+      if (c.pin.length >= LARGO_PIN) return; // ya está completo y se está procesando
       const pin = (c.pin + d).slice(0, LARGO_PIN);
-      if (pin.length < LARGO_PIN) return ui((u) => (u.crearPin = { ...c, pin, error: null }));
-      if (c.paso === 1) return ui((u) => (u.crearPin = { ...c, paso: 2, primero: pin, pin: '', error: null }));
+      if (pin.length < LARGO_PIN) return cambiarPin((u) => (u.crearPin = { ...c, pin, error: null }));
+      cambiarPin((u) => (u.crearPin = { ...c, pin, error: null }));
+      await new Promise((r) => setTimeout(r, 180)); // que se vea el cuarto punto antes de pasar de paso
+      if (c.paso === 1) return cambiarPin((u) => (u.crearPin = { ...c, paso: 2, primero: pin, pin: '', error: null }));
       if (pin !== c.primero) {
-        return ui((u) => (u.crearPin = { ...c, paso: 1, primero: '', pin: '', error: 'Los PIN no coinciden. Vuelve a empezar.' }));
+        return cambiarPin((u) => (u.crearPin = { ...c, paso: 1, primero: '', pin: '', error: 'Los PIN no coinciden. Vuelve a empezar.' }));
       }
-      ui((u) => (u.crearPin = { ...c, pin }));
       try {
         const huellaAlEntrar = e.ui.seguridad.modo === 'protegido' && e.ui.seguridad.huellaAlEntrar;
         await guardarSeguridad({ modo: 'protegido', pin: await crearHuella(pin), huellaAlEntrar });
         ui((u) => (u.crearPin = null));
         e.avisar(c.motivo === 'cambiar' ? 'PIN cambiado' : 'Modo protegido activado');
       } catch (err) {
-        ui((u) => (u.crearPin = { ...c, paso: 1, primero: '', pin: '', error: (err as Error).message }));
+        cambiarPin((u) => (u.crearPin = { ...c, paso: 1, primero: '', pin: '', error: (err as Error).message }));
       }
       return;
     }
     const b = e.ui.bloqueo;
     if (!b.activo || b.pin.length >= LARGO_PIN) return;
     const pin = b.pin + d;
-    ui((u) => (u.bloqueo = { ...b, pin, error: null }));
+    cambiarPin((u) => (u.bloqueo = { ...b, pin, error: null }));
     if (pin.length < LARGO_PIN) return;
     const huella = e.ui.seguridad.pin;
     // Sin límite de intentos (CU-02, 3c): si falla, se borra y se puede reintentar enseguida.
     if (!huella || (await verificarPin(pin, huella))) desbloquear();
-    else ui((u) => (u.bloqueo = { activo: true, pin: '', error: 'PIN incorrecto' }));
+    else cambiarPin((u) => (u.bloqueo = { activo: true, pin: '', error: 'PIN incorrecto' }));
   }
 
   // ---------- Acciones ----------
@@ -254,6 +275,7 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador, al
       u.editandoEvento = null;
       u.notaEtiquetando = null;
       u.selectorMes.abierto = false;
+      if (u.nuevaNota.fecha !== fecha) u.nuevaNota = { fecha, texto: '', etiquetas: [] };
       if (primeroDelMes(fecha) !== u.mesVisible && u.vista === 'principal') u.mesVisible = primeroDelMes(fecha);
     });
   }
@@ -368,8 +390,20 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador, al
         return;
       }
       case 'etiquetar':
-        return ui((u) => (u.notaEtiquetando = u.notaEtiquetando === id ? null : id));
+        // Abre el cuadro de etiquetas (para una nota existente o para la nota nueva).
+        return ui((u) => {
+          if (id === 'nueva' && u.nuevaNota.fecha !== u.diaAbierto) u.nuevaNota = { fecha: u.diaAbierto, texto: '', etiquetas: [] };
+          u.notaEtiquetando = id;
+        });
+      case 'cerrar-etiquetas':
+        return ui((u) => (u.notaEtiquetando = null));
       case 'alternar-etiqueta':
+        if (el.dataset.nota === 'nueva') {
+          return ui((u) => {
+            const lista = u.nuevaNota.etiquetas;
+            u.nuevaNota.etiquetas = lista.includes(id) ? lista.filter((x) => x !== id) : [...lista, id];
+          });
+        }
         if (e.ui.diaAbierto) datos((d) => op.alternarEtiquetaDeNota(d, e.ui.diaAbierto!, el.dataset.nota!, id));
         return;
       case 'borrar-nota':
@@ -408,11 +442,15 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador, al
         return void e.guardarAhora();
       case 'recargar':
         return void e.cargar();
+      case 'periodo-grafica':
+        return ui((u) => (u.graficas.semanas = Number(el.dataset.semanas)));
+      case 'tabla-grafica':
+        return ui((u) => (u.graficas.tabla = !u.graficas.tabla));
       case 'pin-digito':
         return void digitoPin(el.dataset.d!);
       case 'pin-borrar':
-        if (e.ui.crearPin) return ui((u) => (u.crearPin = { ...u.crearPin!, pin: u.crearPin!.pin.slice(0, -1), error: null }));
-        return ui((u) => (u.bloqueo = { ...u.bloqueo, pin: u.bloqueo.pin.slice(0, -1), error: null }));
+        if (e.ui.crearPin) return cambiarPin((u) => (u.crearPin = { ...u.crearPin!, pin: u.crearPin!.pin.slice(0, -1), error: null }));
+        return cambiarPin((u) => (u.bloqueo = { ...u.bloqueo, pin: u.bloqueo.pin.slice(0, -1), error: null }));
       case 'pin-huella':
         return pedirHuella();
       case 'huella-al-entrar': {
@@ -463,13 +501,46 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador, al
     if (presion) clearTimeout(presion.temporizador);
     presion = null;
   };
-  // Teclas del PIN: se iluminan en cuanto el dedo las toca (y siguen iluminadas tras redibujar).
+  // Gráfica de estadísticas: detalle de la semana bajo el dedo, el ratón o el foco del teclado.
+  function mostrarDetalle(barra: HTMLElement | null, x?: number) {
+    const tip = raiz.querySelector<HTMLElement>('#tooltip-grafica');
+    if (!tip) return;
+    raiz.querySelectorAll('.barra.activa').forEach((b) => b.classList.remove('activa'));
+    if (!barra) return void (tip.hidden = true);
+    barra.classList.add('activa');
+    tip.textContent = barra.dataset.barra ?? '';
+    tip.hidden = false;
+    const lienzo = tip.parentElement!.getBoundingClientRect();
+    const caja = barra.getBoundingClientRect();
+    const centro = (x ?? caja.left + caja.width / 2) - lienzo.left;
+    const escala = lienzo.width / tip.parentElement!.offsetWidth || 1; // compensa el zoom de pantallas grandes
+    const izq = Math.min(Math.max(centro / escala - tip.offsetWidth / 2, 0), tip.parentElement!.offsetWidth - tip.offsetWidth);
+    tip.style.left = `${izq}px`;
+  }
+  raiz.addEventListener('pointerover', (ev) => {
+    const barra = (ev.target as HTMLElement).closest<HTMLElement>('[data-barra]');
+    if (barra) mostrarDetalle(barra, ev.clientX);
+  });
+  raiz.addEventListener('pointerleave', () => mostrarDetalle(null), true);
+  raiz.addEventListener('pointerout', (ev) => {
+    if ((ev.target as HTMLElement).closest('[data-barra]') && !(ev.relatedTarget as HTMLElement | null)?.closest?.('[data-barra]')) mostrarDetalle(null);
+  });
+  raiz.addEventListener('focusin', (ev) => {
+    const barra = (ev.target as HTMLElement).closest<HTMLElement>('[data-barra]');
+    if (barra) mostrarDetalle(barra);
+  });
+
+  // Teclas del PIN: amarillas y encogidas mientras el dedo las toca; al soltar vuelven con un rebote suave.
   raiz.addEventListener('pointerdown', (ev) => {
-    const tecla = (ev.target as HTMLElement).closest<HTMLElement>('.tecla[data-d], .tecla[data-accion="pin-borrar"]');
-    if (!tecla) return;
-    const selector = tecla.dataset.d ? `.tecla[data-d="${tecla.dataset.d}"]` : '.tecla[data-accion="pin-borrar"]';
-    teclaPulsada = { selector, hasta: Date.now() + DESTELLO_MS };
-    iluminarTecla(tecla);
+    const tecla = (ev.target as HTMLElement).closest<HTMLElement>('.tecla');
+    if (!tecla || tecla.classList.contains('vacia')) return;
+    tecla.classList.add('pulsada');
+    const desde = Date.now();
+    const soltar = () => {
+      setTimeout(() => tecla.classList.remove('pulsada'), Math.max(0, DESTELLO_MIN_MS - (Date.now() - desde)));
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => tecla.removeEventListener(t, soltar));
+    };
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => tecla.addEventListener(t, soltar));
   });
 
   raiz.addEventListener('pointerdown', (ev) => {
@@ -566,11 +637,20 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador, al
       case 'nueva-nota': {
         if (!fechaAbierta || !texto('texto').trim()) return;
         if (fechaAbierta > h) return e.avisar('No se pueden escribir notas en días futuros');
-        return datos((d) => op.agregarNota(d, fechaAbierta, texto('texto'), [], h));
+        const etiquetas = e.ui.nuevaNota.fecha === fechaAbierta ? e.ui.nuevaNota.etiquetas : [];
+        e.cambiarUI((u) => (u.nuevaNota = { fecha: fechaAbierta, texto: '', etiquetas: [] }), false);
+        return datos((d) => op.agregarNota(d, fechaAbierta, texto('texto'), etiquetas, h));
       }
       case 'nueva-etiqueta': {
         const notaId = form.dataset.nota!;
         if (!fechaAbierta || !texto('nombre').trim()) return;
+        if (notaId === 'nueva') {
+          let creada: string | null = null;
+          datos((d) => (creada = op.crearEtiqueta(d, texto('nombre'), COLORES_ETIQUETA[d.etiquetas.length % COLORES_ETIQUETA.length])?.id ?? null));
+          return ui((u) => {
+            if (creada && !u.nuevaNota.etiquetas.includes(creada)) u.nuevaNota.etiquetas = [...u.nuevaNota.etiquetas, creada];
+          });
+        }
         return datos((d) => {
           const et = op.crearEtiqueta(d, texto('nombre'), COLORES_ETIQUETA[d.etiquetas.length % COLORES_ETIQUETA.length]);
           const nota = d.dias[fechaAbierta]?.notas.find((n) => n.id === notaId);
@@ -592,6 +672,11 @@ export function iniciarApp(raiz: HTMLElement, e: Estado, sync: Sincronizador, al
     if (el instanceof HTMLTextAreaElement) ajustarAltura(el);
     switch (campo) {
       // Mientras se escribe no se redibuja, para no perder el cursor; se guarda solo.
+      case 'nueva-nota-texto':
+        return e.cambiarUI((u) => {
+          if (u.nuevaNota.fecha !== u.diaAbierto) u.nuevaNota = { fecha: u.diaAbierto, texto: '', etiquetas: [] };
+          u.nuevaNota.texto = el.value;
+        }, false);
       case 'nota-texto':
         return e.cambiarDatos((d) => op.editarNota(d, fecha, id, { texto: el.value }), false);
       case 'cal-nombre':

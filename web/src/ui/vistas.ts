@@ -5,6 +5,9 @@ import type { Sincronizador } from '../drive/sincronizador';
 import type { Estado } from '../estado';
 import { filaDrive } from './drive';
 import { esNativo } from '../plataforma';
+import { semanasApiladas } from '../datos/estadisticas';
+import { calcularRecords, esReciente } from '../datos/records';
+import { barrasPorSemana } from './graficas';
 import { clases, esc } from './html';
 import { CATALOGO, icono } from './iconos';
 
@@ -202,17 +205,83 @@ export function vistaBuscar(e: Estado): string {
 
 // ---------- Estadísticas (CU-12, en definición) ----------
 
-function rachaMasLarga(datos: Datos): number {
-  const fechas = Object.keys(datos.dias).filter((f) => datos.dias[f].intensidad > 0).sort();
-  let mejor = 0;
-  let actual = 0;
-  let anterior: Fecha | null = null;
-  for (const f of fechas) {
-    actual = anterior && sumarDias(anterior, 1) === f ? actual + 1 : 1;
-    mejor = Math.max(mejor, actual);
-    anterior = f;
+const DIAS_SEMANA = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+const MESES_CORTOS_R = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+/** "3 mar 2026" */
+function fechaCorta(f: Fecha): string {
+  return `${Number(f.slice(8))} ${MESES_CORTOS_R[Number(f.slice(5, 7)) - 1]} ${f.slice(0, 4)}`;
+}
+/** "3 – 14 mar 2026" o "28 feb – 3 mar 2026" */
+function rango(inicio: Fecha, fin: Fecha): string {
+  if (inicio === fin) return fechaCorta(inicio);
+  if (inicio.slice(0, 7) === fin.slice(0, 7)) return `${Number(inicio.slice(8))} – ${fechaCorta(fin)}`;
+  return `${fechaCorta(inicio).replace(` ${inicio.slice(0, 4)}`, inicio.slice(0, 4) === fin.slice(0, 4) ? '' : ` ${inicio.slice(0, 4)}`)} – ${fechaCorta(fin)}`;
+}
+/** "marzo 2026" */
+const nombreMes = (mes: string) => `${MESES[Number(mes.slice(5)) - 1]} ${mes.slice(0, 4)}`;
+const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
+
+function tarjetaRecord(titulo: string, valor: string, detalle: string, nuevo: boolean, esTexto = false): string {
+  return `
+    <div class="tarjeta record${nuevo ? ' nuevo' : ''}">
+      <span class="titulo-record">${titulo}</span>
+      <b class="${esTexto ? 'texto' : ''}">${valor}</b>
+      <span class="detalle-record">${detalle}</span>
+      ${nuevo ? '<em class="etiqueta-nuevo">¡Nuevo!</em>' : ''}
+    </div>`;
+}
+
+/** Récords (CU-12): 1–7 y 9–12 de la lista acordada. */
+function seccionRecords(d: Datos, hoy: Fecha): string {
+  const r = calcularRecords(d, hoy);
+  if (!r.total.dias) {
+    return `<p class="titulo-grupo">Récords</p><section class="tarjeta proximamente"><span>Marca tus primeros días para empezar a ver récords.</span></section>`;
   }
-  return mejor;
+  const t: string[] = [];
+  const sinDato = '—';
+  t.push(r.rachaMasLarga
+    ? tarjetaRecord('Racha más larga', plural(r.rachaMasLarga.dias, 'día', 'días'), rango(r.rachaMasLarga.inicio, r.rachaMasLarga.fin), esReciente(r.rachaMasLarga.fin, hoy) && r.rachaMasLarga.dias > 1)
+    : tarjetaRecord('Racha más larga', sinDato, '', false));
+  if (r.mejorSemana) {
+    const fin = sumarDias(r.mejorSemana.lunes, 6);
+    t.push(tarjetaRecord('Mejor semana', plural(r.mejorSemana.dias, 'día', 'días'), `${rango(r.mejorSemana.lunes, fin)} · ${r.mejorSemana.puntos} puntos`, esReciente(fin < hoy ? fin : hoy, hoy)));
+  }
+  if (r.mejorMes) t.push(tarjetaRecord('Mejor mes', plural(r.mejorMes.dias, 'día', 'días'), nombreMes(r.mejorMes.mes), r.mejorMes.mes === hoy.slice(0, 7)));
+  if (r.semanasActivas) {
+    t.push(tarjetaRecord('Semanas seguidas activas', plural(r.semanasActivas.semanas, 'semana', 'semanas'),
+      `${rango(r.semanasActivas.inicio, sumarDias(r.semanasActivas.fin, 6))} · ahora llevas ${r.semanasActivasActual}`,
+      r.semanasActivasActual === r.semanasActivas.semanas && r.semanasActivas.semanas > 1 && esReciente(sumarDias(r.semanasActivas.fin, 6) > hoy ? hoy : sumarDias(r.semanasActivas.fin, 6), hoy)));
+  }
+  t.push(tarjetaRecord('Semanas perfectas', String(r.semanasPerfectas.cuantas),
+    r.semanasPerfectas.ultima ? `7 de 7 días · la última: ${fechaCorta(r.semanasPerfectas.ultima)}` : '7 de 7 días · aún ninguna',
+    esReciente(r.semanasPerfectas.ultima, hoy)));
+  t.push(r.rachaMaxima
+    ? tarjetaRecord('Racha al máximo', plural(r.rachaMaxima.dias, 'día', 'días'), `en nivel 3 · ${rango(r.rachaMaxima.inicio, r.rachaMaxima.fin)}`, esReciente(r.rachaMaxima.fin, hoy) && r.rachaMaxima.dias > 1)
+    : tarjetaRecord('Racha al máximo', sinDato, 'aún no hay días en nivel 3', false));
+  t.push(r.mesMasIntenso
+    ? tarjetaRecord('Mes más intenso', plural(r.mesMasIntenso.dias, 'día', 'días'), `en nivel 3 · ${nombreMes(r.mesMasIntenso.mes)}`, r.mesMasIntenso.mes === hoy.slice(0, 7))
+    : tarjetaRecord('Mes más intenso', sinDato, 'aún no hay días en nivel 3', false));
+  t.push(tarjetaRecord('Total histórico', plural(r.total.dias, 'día', 'días'), `marcados en ${plural(r.total.diasDesdeElPrimero, 'día', 'días')} desde el ${fechaCorta(r.total.primerDia!)}`, false));
+  if (r.mejorDiaSemana) t.push(tarjetaRecord('Tu mejor día', DIAS_SEMANA[r.mejorDiaSemana.dia], `${plural(r.mejorDiaSemana.veces, 'vez', 'veces')} · ${r.mejorDiaSemana.porcentaje}% de tus días`, false, true));
+  t.push(r.caracteristicaFrecuente
+    ? tarjetaRecord('Característica más frecuente', esc(r.caracteristicaFrecuente.nombre), `en ${plural(r.caracteristicaFrecuente.veces, 'día', 'días')}`, false, true)
+    : tarjetaRecord('Característica más frecuente', sinDato, 'marca características en tus días', false));
+
+  const filas = r.porCaracteristica.map((c) => {
+    const fin = sumarDias(c.lunes, 6);
+    const nuevo = esReciente(fin > hoy ? hoy : fin, hoy);
+    return `<div class="fila-record"><span class="txt">${esc(c.nombre)}${c.archivada ? ' <span class="tenue">(archivada)</span>' : ''}</span>
+      <b>${c.veces}</b><span class="tenue">en la semana ${rango(c.lunes, fin)}</span>${nuevo ? '<em class="etiqueta-nuevo">¡Nuevo!</em>' : ''}</div>`;
+  });
+  return `
+    <p class="titulo-grupo">Récords</p>
+    <div class="records">${t.join('')}</div>
+    <section class="tarjeta records-caracteristicas">
+      <b>Récord semanal por característica</b>
+      <span class="tenue">Más veces en una misma semana</span>
+      ${filas.length ? filas.join('') : '<p class="tenue">Marca características en tus días para ver estos récords.</p>'}
+    </section>`;
 }
 
 export function vistaEstadisticas(e: Estado, hoy: Fecha): string {
@@ -225,13 +294,9 @@ export function vistaEstadisticas(e: Estado, hoy: Fecha): string {
     ${cabecera('Estadísticas')}
     <div class="cifras">
       ${cifra(racha(d, hoy), 'Racha actual')}
-      ${cifra(rachaMasLarga(d), 'Racha más larga')}
       ${cifra(diasMes, `Días marcados en ${MESES[Number(mes.slice(5)) - 1]}`)}
       ${cifra(totalNotas, 'Notas en total')}
     </div>
-    <section class="tarjeta proximamente">
-      ${icono('estadisticas')}
-      <b>Gráficas en definición</b>
-      <span>La gráfica lineal de intensidad y la de radar de características llegarán en una próxima versión (CU-12).</span>
-    </section>`;
+    ${barrasPorSemana(semanasApiladas(d, hoy, e.ui.graficas.semanas), e.ui.graficas.tabla, e.ui.graficas.semanas)}
+    ${seccionRecords(d, hoy)}`;
 }

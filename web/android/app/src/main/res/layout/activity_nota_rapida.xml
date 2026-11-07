@@ -3,14 +3,18 @@
     android:id="@+id/raiz_nota"
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:background="#0E0E0F" android:orientation="vertical">
+    <!-- Arriba: regresar · botón de etiquetas (abre una lista con casillas) · guardar -->
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:gravity="center_vertical"
         android:paddingStart="6dp" android:paddingEnd="6dp" android:paddingTop="6dp" android:paddingBottom="6dp">
         <ImageView android:id="@+id/boton_cancelar" android:layout_width="48dp" android:layout_height="48dp"
             android:padding="12dp" android:src="@drawable/ic_flecha_atras" android:contentDescription="@string/nota_cancelar"
             android:background="?attr/selectableItemBackgroundBorderless" android:clickable="true" android:focusable="true" />
-        <TextView android:id="@+id/fecha_nota" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-            android:gravity="center" android:textColor="#8B8B8B" android:textSize="12sp" android:fontFamily="monospace" />
+        <TextView android:id="@+id/boton_etiquetas" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+            android:gravity="center" android:paddingStart="8dp" android:paddingEnd="8dp"
+            android:text="@string/nota_etiquetas" android:textColor="#A3A3A3" android:textSize="14sp"
+            android:singleLine="true" android:ellipsize="end"
+            android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" />
         <ImageView android:id="@+id/boton_guardar" android:layout_width="48dp" android:layout_height="48dp"
             android:padding="12dp" android:src="@drawable/ic_flecha_guardar" android:contentDescription="@string/nota_guardar"
             android:background="?attr/selectableItemBackgroundBorderless" android:clickable="true" android:focusable="true" />

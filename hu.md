@@ -32,17 +32,19 @@ Quiero un programa web local donde, al igual que en la aplicación, pueda **modi
 
 ## HU-05 — Características del día
 
-Un día debe tener una **lista de características** (cosas que pasaron), por ejemplo:
+Un día debe tener una **lista de acciones** (cosas que pasaron):
 
-- Sacar un contacto.
-- Conocer a una nueva persona.
-- Salir con alguien nuevo.
+- contacto
+- salida
+- escalamiento
 
 Las características **no se reflejan en los calendarios**. También podré **agregar y modificar** nuevos elementos de la lista.
 
 ## HU-06 — Notas
 
-Para un día se podrán agregar **diferentes notas**, y cada nota podrá tener una **etiqueta**.
+Para un día se podrán agregar **diferentes notas**, y cada nota podrá tener **una o varias etiquetas**: análisis, mejora, error, shitest, juego, idis.
+
+Al pulsar **poner etiquetas** se abrirá un cuadro para seleccionar una o más etiquetas. En el widget de nota, arriba entre las dos flechas habrá un botón **Etiquetas** que abre una lista simple con casillas.
 
 ## HU-07 — Almacenamiento
 

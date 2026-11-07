@@ -12,6 +12,7 @@
     <string name="widget_nota_titulo">Nota del día</string>
     <string name="widget_nota_pista">Iniciar escritura</string>
     <string name="nota_guardar">Guardar</string>
+    <string name="nota_etiquetas">Etiquetas</string>
     <string name="nota_cancelar">Cancelar</string>
     <string name="widget_mapa_nombre">Mapa de actividad</string>
     <string name="widget_mapa_descripcion">Tus semanas más recientes, como en la app</string>

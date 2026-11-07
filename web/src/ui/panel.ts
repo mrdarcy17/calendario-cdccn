@@ -1,6 +1,6 @@
 import { fechaLarga } from '../datos/fechas';
 import { eventosEn, obtenerDia } from '../datos/operaciones';
-import type { Datos, Evento, Fecha, Nota } from '../datos/tipos';
+import type { Datos, Evento, Fecha } from '../datos/tipos';
 import type { Estado } from '../estado';
 import { clases, esc } from './html';
 import { icono } from './iconos';
@@ -69,22 +69,37 @@ function eventos(e: Estado, fecha: Fecha): string {
     </section>`;
 }
 
-function selectorEtiquetas(datos: Datos, nota: Nota): string {
-  const opciones = datos.etiquetas
-    .filter((et) => !et.archivada || nota.etiquetas.includes(et.id))
+/** Cuadro para elegir una o varias etiquetas, para una nota existente o para la nota nueva. */
+export function dialogoEtiquetas(e: Estado): string {
+  const objetivo = e.ui.notaEtiquetando;
+  const fecha = e.ui.diaAbierto;
+  if (!objetivo || !fecha) return '';
+  const nota = objetivo === 'nueva' ? null : obtenerDia(e.datos, fecha).notas.find((n) => n.id === objetivo);
+  if (objetivo !== 'nueva' && !nota) return '';
+  const elegidas = nota ? nota.etiquetas : e.ui.nuevaNota.etiquetas;
+  const filas = e.datos.etiquetas
+    .filter((et) => !et.archivada || elegidas.includes(et.id))
     .map((et) => {
-      const on = nota.etiquetas.includes(et.id);
-      return `<button class="${clases('etiqueta', 'opcion', on && 'on', et.archivada && 'archivada')}" data-accion="alternar-etiqueta" data-id="${et.id}" data-nota="${nota.id}" aria-pressed="${on}">
-        <i style="background:${esc(et.color)}"></i>${esc(et.nombre)}</button>`;
+      const on = elegidas.includes(et.id);
+      return `<button class="${clases('fila-etiqueta', on && 'on')}" role="checkbox" aria-checked="${on}"
+        data-accion="alternar-etiqueta" data-id="${et.id}" data-nota="${objetivo}">
+        <i class="punto-color" style="background:${esc(et.color)}"></i>
+        <span>${esc(et.nombre)}${et.archivada ? ' <span class="tenue">(archivada)</span>' : ''}</span>
+        <span class="casilla">${on ? icono('check') : ''}</span>
+      </button>`;
     })
     .join('');
   return `
-    <div class="selector-etiquetas">
-      <div class="chips-envolver">${opciones}</div>
-      <form data-form="nueva-etiqueta" data-nota="${nota.id}" class="nueva-etiqueta">
+    <div class="velo-dialogo" data-accion="cerrar-etiquetas"></div>
+    <div class="dialogo dialogo-etiquetas" role="dialog" aria-modal="true" aria-labelledby="titulo-etiquetas">
+      <h2 id="titulo-etiquetas">Etiquetas</h2>
+      <p class="tenue">Elige una o varias para ${nota ? 'esta nota' : 'la nota nueva'}.</p>
+      <div class="lista-etiquetas">${filas || '<p class="tenue">Aún no hay etiquetas.</p>'}</div>
+      <form data-form="nueva-etiqueta" data-nota="${objetivo}" class="nueva-etiqueta">
         <input name="nombre" placeholder="Nueva etiqueta" maxlength="30" autocomplete="off">
         <button type="submit" class="btn-chico">${icono('mas')}</button>
       </form>
+      <button class="btn-principal" data-accion="cerrar-etiquetas">Listo</button>
     </div>`;
 }
 
@@ -97,18 +112,23 @@ function notas(e: Estado, fecha: Fecha, futura: boolean): string {
         <textarea data-campo="nota-texto" data-id="${n.id}" data-fecha="${fecha}" rows="2" aria-label="Texto de la nota">${esc(n.texto)}</textarea>
         <div class="nota-pie">
           <div class="chips-envolver">${n.etiquetas.map((id) => chipEtiqueta(e.datos, id)).join('')}</div>
-          <button class="btn-icono" data-accion="etiquetar" data-id="${n.id}" title="Etiquetas" aria-label="Etiquetas">${icono('etiqueta')}</button>
+          <button class="btn-icono" data-accion="etiquetar" data-id="${n.id}" title="Poner etiquetas" aria-label="Poner etiquetas">${icono('etiqueta')}</button>
           <button class="btn-icono peligro" data-accion="borrar-nota" data-id="${n.id}" data-fecha="${fecha}" title="Eliminar nota" aria-label="Eliminar nota">${icono('borrar')}</button>
         </div>
-        ${e.ui.notaEtiquetando === n.id ? selectorEtiquetas(e.datos, n) : ''}
       </div>`,
     )
     .join('');
   const nueva = futura
     ? '<p class="tenue">No se pueden escribir notas en días futuros.</p>'
     : `<form data-form="nueva-nota" data-fecha="${fecha}" class="nueva-nota">
-        <textarea name="texto" rows="2" placeholder="Iniciar escritura" aria-label="Nueva nota"></textarea>
-        <button type="submit" class="btn-chico">${icono('mas')}Agregar nota</button>
+        <textarea name="texto" rows="2" placeholder="Iniciar escritura" aria-label="Nueva nota" data-campo="nueva-nota-texto">${
+          e.ui.nuevaNota.fecha === fecha ? esc(e.ui.nuevaNota.texto) : ''
+        }</textarea>
+        <div class="nueva-nota-pie">
+          <div class="chips-envolver">${(e.ui.nuevaNota.fecha === fecha ? e.ui.nuevaNota.etiquetas : []).map((id) => chipEtiqueta(e.datos, id)).join('')}</div>
+          <button type="button" class="btn-texto" data-accion="etiquetar" data-id="nueva">${icono('etiqueta')}Etiquetas</button>
+          <button type="submit" class="btn-chico">${icono('mas')}Agregar nota</button>
+        </div>
       </form>`;
   return `
     <section class="seccion">

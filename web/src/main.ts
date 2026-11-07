@@ -9,7 +9,7 @@ import { Estado } from './estado';
 import { esNativo, plataforma } from './plataforma';
 import { huellaDisponible } from './biometria';
 import { AlmacenSeguridadNativo } from './seguridad';
-import { huboCambiosDeWidgets } from './widgets';
+import { cambiosDeWidgets, compartirEstadoDrive } from './widgets';
 import { iniciarApp } from './ui/app';
 
 const REVISAR_DRIVE_MS = 60_000;
@@ -45,14 +45,30 @@ await estado.cargar();
 
 // Widgets (Android): lo que marcaron o escribieron mientras la app estaba cerrada se sube a Drive.
 // estado.cargar() ya leyó el archivo actualizado; solo falta avisar al sincronizador.
-if (esNativo && estado.datos && (await huboCambiosDeWidgets())) sync.cambioLocal();
+// Si la subida en segundo plano ya llevó esos cambios a Drive, solo se anota la versión (no se vuelve a subir).
+async function revisarWidgets(recargar: boolean) {
+  const { hubo, versionSubida } = await cambiosDeWidgets();
+  if (!hubo && !versionSubida) return;
+  if (recargar && hubo) await estado.recargar();
+  if (versionSubida) sync.registrarSubidaExterna(versionSubida);
+  else if (hubo) sync.cambioLocal();
+}
+if (esNativo && estado.datos) await revisarWidgets(false); // estado.cargar() ya leyó el archivo actualizado
 if (esNativo) {
   const { App } = await import('@capacitor/app');
-  App.addListener('resume', async () => {
-    if (!(await huboCambiosDeWidgets())) return;
-    await estado.recargar();
-    sync.cambioLocal();
-  });
+  App.addListener('resume', () => void revisarWidgets(true));
+
+  // La parte nativa necesita saber si Drive está conectado y cuál es el archivo.
+  let compartido = '';
+  const compartir = () => {
+    const actual = { conectado: sync.conectado, archivoId: sync.archivoId, version: sync.version };
+    const texto = JSON.stringify(actual);
+    if (texto === compartido) return;
+    compartido = texto;
+    void compartirEstadoDrive(actual);
+  };
+  sync.alCambiar(compartir);
+  compartir();
 }
 
 if (estado.datos) {

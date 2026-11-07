@@ -319,3 +319,35 @@ describe('Android: renovación del token sin molestar al usuario', () => {
     expect(sync.estado).toBe('reconectar');
   });
 });
+
+describe('Android: subida en segundo plano desde los widgets', () => {
+  beforeEach(async () => {
+    await sync.conectar();
+  });
+
+  it('si ya se subió el archivo actual, solo anota la versión y no vuelve a subir', async () => {
+    const subidas = drive.subidas;
+    // Simula: el widget marcó hoy y la subida nativa lo llevó a Drive (versión nueva).
+    op.ciclarIntensidad(local, HOY, HOY);
+    drive.escribirDesdeOtro(local);
+    sync.registrarSubidaExterna(String(drive.archivo!.version));
+    expect(sync.estado).toBe('al-dia');
+    await sync.sincronizar();
+    expect(drive.subidas).toBe(subidas); // nada más que subir
+    // Y un cambio posterior en la web sí se descarga después:
+    const web = structuredClone(local);
+    op.agregarNota(web, HOY, 'desde la web', [], HOY);
+    drive.escribirDesdeOtro(web);
+    await sync.sincronizar();
+    expect(local.dias[HOY].notas[0]?.texto).toBe('desde la web');
+  });
+
+  it('si la app tenía cambios propios sin subir, los sube igual', async () => {
+    op.ciclarIntensidad(local, HOY, HOY);
+    sync.cambioLocal();
+    sync.registrarSubidaExterna('999');
+    await sync.sincronizar();
+    expect(drive.datos().dias[HOY].intensidad).toBe(1);
+    expect(sync.estado).toBe('al-dia');
+  });
+});

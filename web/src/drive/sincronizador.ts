@@ -85,6 +85,22 @@ export class Sincronizador {
   get pendiente() {
     return this.memoria.pendiente;
   }
+  get archivoId() {
+    return this.memoria.archivoId;
+  }
+  get version() {
+    return this.memoria.version;
+  }
+
+  /**
+   * Android: la subida en segundo plano de los widgets ya dejó en Drive el archivo actual con esta versión.
+   * Se anota para no volver a subirlo (y así no pisar cambios hechos en la web después).
+   */
+  registrarSubidaExterna(version: string) {
+    if (this.memoria.pendiente) return this.cambioLocal(); // hay cambios propios sin subir: se suben
+    this.guardarMemoria({ version, ultimaSync: new Date().toISOString() });
+    if (this.estado !== 'reconectar') this.poner('al-dia');
+  }
 
   alCambiar(fn: () => void) {
     this.oyentes.push(fn);

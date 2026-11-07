@@ -14,8 +14,10 @@ export interface UI {
   /** Día cuyas opciones están abiertas (clic derecho). */
   diaAbierto: Fecha | null;
   selectorMes: { abierto: boolean; anio: number };
-  /** Nota cuyo selector de etiquetas está abierto. */
+  /** Cuadro de etiquetas abierto: id de la nota, o 'nueva' para la nota que se está escribiendo. */
   notaEtiquetando: string | null;
+  /** Nota nueva que se está escribiendo (se conserva al abrir el cuadro de etiquetas). */
+  nuevaNota: { fecha: Fecha | null; texto: string; etiquetas: string[] };
   /** Evento que se está editando, o 'nuevo'. */
   editandoEvento: string | null;
   /** Característica cuyo selector de ícono está abierto, o 'calendario'. */
@@ -30,6 +32,8 @@ export interface UI {
   /** Creación o cambio de PIN: se escribe dos veces (CU-03). */
   crearPin: { motivo: 'activar' | 'cambiar'; paso: 1 | 2; primero: string; pin: string; error: string | null } | null;
   huellaDisponible: boolean;
+  /** Estadísticas: semanas de la gráfica y si se ve como tabla. */
+  graficas: { semanas: number; tabla: boolean };
   guardado: EstadoGuardado;
   errores: string[];
   aviso: string | null;
@@ -72,6 +76,7 @@ export class Estado {
       diaAbierto: null,
       selectorMes: { abierto: false, anio: Number(h.slice(0, 4)) },
       notaEtiquetando: null,
+      nuevaNota: { fecha: null, texto: '', etiquetas: [] },
       editandoEvento: null,
       eligiendoIcono: null,
       filtro: {},
@@ -80,6 +85,7 @@ export class Estado {
       bloqueo: { activo: false, pin: '', error: null },
       crearPin: null,
       huellaDisponible: false,
+      graficas: { semanas: 12, tabla: false },
       guardado: 'cargando',
       errores: [],
       aviso: null,

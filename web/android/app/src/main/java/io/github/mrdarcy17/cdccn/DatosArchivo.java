@@ -74,6 +74,8 @@ final class DatosArchivo {
         }
         if (!tmp.renameTo(f)) throw new IOException("No se pudo reemplazar el archivo de datos.");
         new File(c.getFilesDir(), MARCA_CAMBIOS).createNewFile();
+        // Lo hecho desde un widget se sube solo a Drive (si está conectado), aunque la app no se abra.
+        SubirDriveWorker.programar(c);
     }
 
     private static void copiar(File de, File a) throws IOException {
@@ -140,8 +142,26 @@ final class DatosArchivo {
         return nueva;
     }
 
-    /** Agrega una nota nueva al día de hoy (CU-09). false si no hay datos o el texto está vacío. */
-    static synchronized boolean agregarNotaHoy(Context c, String texto) throws IOException, JSONException {
+    /** Etiquetas no archivadas, en orden: { id, nombre, color }. */
+    static java.util.List<String[]> etiquetasActivas(Context c) {
+        java.util.List<String[]> lista = new java.util.ArrayList<>();
+        try {
+            JSONObject datos = leer(c);
+            JSONArray arr = datos == null ? null : datos.optJSONArray("etiquetas");
+            if (arr != null) {
+                for (int i = 0; i < arr.length(); i++) {
+                    JSONObject e = arr.getJSONObject(i);
+                    if (!e.optBoolean("archivada", false)) lista.add(new String[] { e.optString("id"), e.optString("nombre"), e.optString("color", "#FACC15") });
+                }
+            }
+        } catch (Exception ignorado) {
+            // sin datos legibles: sin etiquetas
+        }
+        return lista;
+    }
+
+    /** Agrega una nota nueva al día de hoy (CU-09) con las etiquetas elegidas. false si no hay datos o el texto está vacío. */
+    static synchronized boolean agregarNotaHoy(Context c, String texto, java.util.List<String> etiquetas) throws IOException, JSONException {
         String limpio = texto == null ? "" : texto.trim();
         if (limpio.isEmpty()) return false;
         JSONObject datos = leer(c);
@@ -150,7 +170,14 @@ final class DatosArchivo {
         JSONObject nota = new JSONObject();
         nota.put("id", nuevoId("not", datos));
         nota.put("texto", limpio);
-        nota.put("etiquetas", new JSONArray());
+        // Solo etiquetas que existen (por si se borraron mientras el bloc de notas estaba abierto), sin repetir.
+        Set<String> validas = new HashSet<>();
+        JSONArray todas = datos.optJSONArray("etiquetas");
+        if (todas != null) for (int i = 0; i < todas.length(); i++) validas.add(todas.getJSONObject(i).optString("id"));
+        JSONArray elegidas = new JSONArray();
+        Set<String> puestas = new HashSet<>();
+        if (etiquetas != null) for (String id : etiquetas) if (validas.contains(id) && puestas.add(id)) elegidas.put(id);
+        nota.put("etiquetas", elegidas);
         nota.put("creada", marca);
         nota.put("modificada", marca);
         asegurarDia(datos, hoy()).getJSONArray("notas").put(nota);

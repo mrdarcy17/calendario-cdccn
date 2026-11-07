@@ -44,11 +44,18 @@ export function pantallaBloqueo(ui: UI): string {
     </div>`;
 }
 
+/** Título y ayuda de la pantalla de crear/cambiar PIN según el paso. */
+export function textosCrearPin(c: NonNullable<UI['crearPin']>): { titulo: string; ayuda: string } {
+  return {
+    titulo: c.paso === 1 ? (c.motivo === 'cambiar' ? 'Escribe tu nuevo PIN' : `Crea un PIN de ${LARGO_PIN} dígitos`) : 'Confirma tu PIN',
+    ayuda: c.paso === 1 ? 'Lo pedirá la app al abrirse en modo protegido' : 'Escríbelo otra vez para evitar errores',
+  };
+}
+
 export function pantallaCrearPin(ui: UI): string {
   const c = ui.crearPin;
   if (!c) return '';
-  const titulo = c.paso === 1 ? (c.motivo === 'cambiar' ? 'Escribe tu nuevo PIN' : `Crea un PIN de ${LARGO_PIN} dígitos`) : 'Confirma tu PIN';
-  const ayuda = c.paso === 1 ? 'Lo pedirá la app al abrirse en modo protegido' : 'Escríbelo otra vez para evitar errores';
+  const { titulo, ayuda } = textosCrearPin(c);
   return `
     <div class="pantalla-pin creando" role="dialog" aria-modal="true" aria-label="${esc(titulo)}">
       <div class="logo-caja">${logoSarger()}</div>
